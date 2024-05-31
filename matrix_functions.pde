@@ -32,27 +32,23 @@ float[][] matrixMult(float[][] a, float[][] b){
 
 PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
   PVector angles = rotation.copy();
-  
-  angles.x = (float)Math.toRadians(angles.x);
-  angles.y = (float)Math.toRadians(angles.y);
-  angles.z = (float)Math.toRadians(angles.z);
-  
+    
   float[][] rotateX = {
-    {     1     ,      0      ,      0       },
-    {     0     ,cos(angles.x),-sin(angles.x)},
-    {     0     ,sin(angles.x), cos(angles.x)}
+    {     1     ,           0           ,           0            },
+    {     0     ,getCos((int)rotation.x),-getSin((int)rotation.x)},
+    {     0     ,getSin((int)rotation.x), getCos((int)rotation.x)}
   };
   
   float[][] rotateY = {
-    { cos(angles.y),     0     ,sin(angles.y)},
-    {     0        ,     1     ,      0      },
-    {-sin(angles.y),     0     ,cos(angles.y)}
+    { getCos((int)rotation.y),     0     ,getSin((int)rotation.y)},
+    {          0             ,     1     ,           0           },
+    {-getSin((int)rotation.y),     0     ,getCos((int)rotation.y)}
   };
   
   float[][] rotateZ = {
-    {cos(angles.z),-sin(angles.z),    0      },
-    {sin(angles.z), cos(angles.z),    0      },
-    {      0      ,      0       ,    1      }
+    {getCos((int)rotation.z),-getSin((int)rotation.z),    0      },
+    {getSin((int)rotation.z), getCos((int)rotation.z),    0      },
+    {           0           ,           0            ,    1      }
   };
   
   PVector[] resultDisps = new PVector[pointDisps.length];

@@ -16,7 +16,8 @@ class Axis{
     pointDisps[4] = new PVector(0, 0, -1);
     pointDisps[5] = new PVector(0, 0, 1);
 
-    for(int i = 0; i < pointDisps.length; i++){ 
+    for(int i = 0; i < pointDisps.length; i++){
+      //add distance to points based on the point disps, scaled by half its length
       points[i] = center.copy().add(pointDisps[i].copy().mult(l/2));
     }
   }
@@ -52,12 +53,17 @@ class Axis{
     if(direction == 'x') rotation.x += amount;
     if(direction == 'y') rotation.y += amount;
     if(direction == 'z') rotation.z += amount;
+    
+    while(rotation.x < 0) rotation.x += 360;
+    while(rotation.y < 0) rotation.y += 360;
+    while(rotation.z < 0) rotation.z += 360;
   }
   
   void update(){
     PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
     
     for(int i = 0; i < pointDisps.length; i++){
+      //get center, add the result displacement generated from the rotation vector, scaled by half its length
       points[i] = center.copy().add(resultDisps[i].mult(axisLength/2));
     }
   }

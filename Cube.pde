@@ -18,6 +18,7 @@ class Cube{
   
   void removeNeighbors(Block block, PVector disps, int size){
     float offset = size/2;
+    if(size % 2 == 0) offset -= 0.5;
         
     if(disps.x == offset){
       //X+ Face (R)
@@ -46,28 +47,19 @@ class Cube{
   }
   
   void show(){
-    Block frontMost = blocks[0];
-    frontMost.resetFacesToShow();
-    
     String[] faces = blocks[0].findFacesToShow();
     
     for(Block b: blocks){
       b.resetFacesToShow();
       for(String f: faces){
-        b.toggleFacesToShow(f, 0);
+        b.toggleFacesToShow(f, 1);
       }
       b.setType("full");
       b.show();
-      
-      if(b.getCenter().z > frontMost.getCenter().z){
-        frontMost = b;
-      }
+      b.showColors();
     }
-        
-    //frontMost.setType("frame");
-    frontMost.show();
     
-    //axis.show();
+    axis.show();
     stroke(180, 0, 180);
     strokeWeight(10);
   }
@@ -119,7 +111,13 @@ class Cube{
       }
       result[counter] = disps.get(i);
       if(base % 2 == 0){
-        result[counter].div(2.0);
+        PVector translationFactor = disps.get(i).copy();
+        //Scale everything down to either 0.5 or -0.5
+        translationFactor.x /= -2*abs(translationFactor.x);
+        translationFactor.y /= -2*abs(translationFactor.y);
+        translationFactor.z /= -2*abs(translationFactor.z);
+        //add translationFactor to result
+        result[counter].add(translationFactor);
       }
       counter++;
     }
