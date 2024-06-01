@@ -70,19 +70,43 @@ class Block{
   }
   
   void setType(String type){
-    if(!type.equals("frame") && !type.equals("full")){
-      return;
-    }
+    //if(!type.equals("frame") && !type.equals("full")){
+    //  return;
+    //}
     coloringState = type;
   }
   
   void show(){
     int[] order = {0, 1, 4, 5};
+    if(coloringState.equals("pers")){
+      PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
+      PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter})[0];
+      //println("A" + distToCenter.x/blockLengths[size - 1]);
+      //println("B" + blockLengths[size - 1]);
+      //println(centerDisps);
+
+      PVector[] newPoints = applyPerspectiveProjection(resultDisps, centerDisps, sideLength);
+
+      stroke(20);
+      strokeWeight(16);
+      for(PVector p: newPoints) point(p.x, p.y);
+      stroke(255, 0, 0);
+      point(newPoints[0].x, newPoints[0].y);
+      stroke(0, 0, 255);
+      point(newPoints[1].x, newPoints[1].y);
+      //println(newPoints[0]);
+      strokeWeight(2);
+      stroke(100);
+      for(int i = 0; i < 4; i++){
+        line(newPoints[2*i].x, newPoints[2*i].y, newPoints[(2*i + 1) % 8].x, newPoints[(2*i + 1) % 8].y);
+        line(newPoints[order[i]].x, newPoints[order[i]].y, newPoints[order[i] + 2].x, newPoints[order[i] + 2].y);
+        line(newPoints[i].x, newPoints[i].y, newPoints[(i + 4) % 8].x, newPoints[(i + 4) % 8].y);
+      }
+    }
     if(coloringState.equals("frame")){
         stroke(20);
         strokeWeight(16);
       for(PVector p: points) point(p.x, p.y);
-      
       strokeWeight(2);
       for(int i = 0; i < 4; i++){
         stroke(0, 0, 255);

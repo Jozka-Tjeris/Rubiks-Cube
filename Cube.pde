@@ -52,12 +52,13 @@ class Cube{
     for(Block b: blocks){
       b.resetFacesToShow();
       for(String f: faces){
-        b.toggleFacesToShow(f, 1);
+        b.toggleFacesToShow(f, 0);
       }
-      b.setType("full");
+      b.setType("pers");
       b.show();
-      b.showColors();
+      //b.showColors();
     }
+    blocks[0].show();
     
     axis.show();
     stroke(180, 0, 180);

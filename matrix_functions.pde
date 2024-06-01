@@ -31,8 +31,6 @@ float[][] matrixMult(float[][] a, float[][] b){
 }
 
 PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
-  PVector angles = rotation.copy();
-    
   float[][] rotateX = {
     {     1     ,           0           ,           0            },
     {     0     ,getCos((int)rotation.x),-getSin((int)rotation.x)},
@@ -61,5 +59,31 @@ PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
                                 vectorToMatrix(pointDisps[i])
                                 ))));
   }
+  return resultDisps;
+}
+
+PVector[] applyPerspectiveProjection(PVector[] initialDisps, PVector distToCenter, float sideLength){
+  PVector[] resultDisps = new PVector[initialDisps.length];
+  
+  PVector normalizedDistToCenter = distToCenter.copy().mult(2);
+  normalizedDistToCenter.x /= sideLength;
+  normalizedDistToCenter.y /= sideLength;
+  normalizedDistToCenter.z /= sideLength;
+  
+  for(int i = 0; i < initialDisps.length; i++){
+    PVector normalizedVector = initialDisps[i].copy().add(normalizedDistToCenter);
+    //println(normalizedVector);
+    float z = 1 / (7 - normalizedVector.z);
+    float[][] projectionMatrix = {
+      {z, 0, 0},
+      {0, z, 0},
+      {0, 0, 1}
+    };
+    
+    resultDisps[i] = matrixToVector(matrixMult(projectionMatrix, vectorToMatrix(normalizedVector)));
+    resultDisps[i].mult(blockLengths[size]*3);
+    resultDisps[i].x += center.x;
+    resultDisps[i].y += center.y;
+  }  
   return resultDisps;
 }

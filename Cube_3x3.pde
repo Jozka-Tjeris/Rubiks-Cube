@@ -141,3 +141,4 @@ float getSin(int angle){
 //29 May: Added Cube class to consolidate the blocks and axis, created a 3D space of cubes
 //30 May: Corrected the display of the cube (selective face-rendering), removing unneccessary shapes
 //31 May: Added coloured tiles
+//1 Jun: Started to add weak perspective projection
