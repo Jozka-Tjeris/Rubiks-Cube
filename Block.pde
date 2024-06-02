@@ -13,13 +13,13 @@ class Block{
   PVector center = new PVector(0, 0, 0);
   PVector currCenter = new PVector(0, 0, 0);
   float sideLength = 0;
-  PVector distToCenter = new PVector(0, 0, 0);
+  PVector distToCenter = new PVector(0, 0, 0); //stores it as a multiple of sideLength, not absolute distance
   PVector rotation = new PVector(0, 0, 0);
   String coloringState = "frame"; //frame state draws skeleton, full state draws cube
   int[] sideColors = {-1, -1, -1, -1, -1, -1}; //U, D, R, L, F, B
                     //-1 = draw nothing, 0 = black square, 1 = black square with color inside
   ArrayList<String> neighbors = new ArrayList<String>();
-  
+    
   Block(PVector v, float l){
     center = v.copy();
     sideLength = l;
@@ -65,7 +65,7 @@ class Block{
     neighbors.remove(direction);
   }
   
-  void setDistanceFromCenter(PVector v){
+  void setDistanceFactorFromCenter(PVector v){
     distToCenter = v.copy();
   }
   
@@ -77,30 +77,44 @@ class Block{
   }
   
   void show(){
-    int[] order = {0, 1, 4, 5};
+    int[] order = {0, 1, 4, 5};      
     if(coloringState.equals("pers")){
       PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
       PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter})[0];
-      //println("A" + distToCenter.x/blockLengths[size - 1]);
-      //println("B" + blockLengths[size - 1]);
-      //println(centerDisps);
+      PVector[] perspectivePoints = applyPerspectiveProjection(resultDisps, centerDisps);
 
-      PVector[] newPoints = applyPerspectiveProjection(resultDisps, centerDisps, sideLength);
-
-      stroke(20);
-      strokeWeight(16);
-      for(PVector p: newPoints) point(p.x, p.y);
-      stroke(255, 0, 0);
-      point(newPoints[0].x, newPoints[0].y);
-      stroke(0, 0, 255);
-      point(newPoints[1].x, newPoints[1].y);
-      //println(newPoints[0]);
-      strokeWeight(2);
-      stroke(100);
-      for(int i = 0; i < 4; i++){
-        line(newPoints[2*i].x, newPoints[2*i].y, newPoints[(2*i + 1) % 8].x, newPoints[(2*i + 1) % 8].y);
-        line(newPoints[order[i]].x, newPoints[order[i]].y, newPoints[order[i] + 2].x, newPoints[order[i] + 2].y);
-        line(newPoints[i].x, newPoints[i].y, newPoints[(i + 4) % 8].x, newPoints[(i + 4) % 8].y);
+      strokeWeight(1);
+      stroke(60);
+      fill(30);
+      if(sideColors[5] >= 0){
+        //4576, Z- face (B)
+        quad(perspectivePoints[0].x, perspectivePoints[0].y, perspectivePoints[1].x, perspectivePoints[1].y, 
+             perspectivePoints[3].x, perspectivePoints[3].y, perspectivePoints[2].x, perspectivePoints[2].y);
+      }
+      if(sideColors[4] >= 0){
+        //0132, Z+ face (F)
+        quad(perspectivePoints[4].x, perspectivePoints[4].y, perspectivePoints[5].x, perspectivePoints[5].y, 
+             perspectivePoints[7].x, perspectivePoints[7].y, perspectivePoints[6].x, perspectivePoints[6].y);
+      }
+      if(sideColors[0] >= 0){
+        //0154, Y- Face (U)
+        quad(perspectivePoints[0].x, perspectivePoints[0].y, perspectivePoints[1].x, perspectivePoints[1].y, 
+             perspectivePoints[5].x, perspectivePoints[5].y, perspectivePoints[4].x, perspectivePoints[4].y);
+      }
+      if(sideColors[1] >= 0){
+        //2376, Y+ Face (D)
+        quad(perspectivePoints[2].x, perspectivePoints[2].y, perspectivePoints[3].x, perspectivePoints[3].y, 
+             perspectivePoints[7].x, perspectivePoints[7].y, perspectivePoints[6].x, perspectivePoints[6].y);
+      }
+      if(sideColors[3] >= 0){
+        //0264, X- Face (L)
+        quad(perspectivePoints[0].x, perspectivePoints[0].y, perspectivePoints[2].x, perspectivePoints[2].y, 
+             perspectivePoints[6].x, perspectivePoints[6].y, perspectivePoints[4].x, perspectivePoints[4].y);
+      }
+      if(sideColors[2] >= 0){
+        //1375, X+ Face (R)
+        quad(perspectivePoints[1].x, perspectivePoints[1].y, perspectivePoints[3].x, perspectivePoints[3].y, 
+             perspectivePoints[7].x, perspectivePoints[7].y, perspectivePoints[5].x, perspectivePoints[5].y);
       }
     }
     if(coloringState.equals("frame")){
@@ -269,7 +283,7 @@ class Block{
   void update(){
     
     PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
-    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter})[0];
+    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter.copy().mult(sideLength)})[0];
     
     currCenter = center.copy().add(centerDisps);
     

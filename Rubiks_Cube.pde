@@ -12,11 +12,15 @@ boolean spacebarPressed = false;
 PFont f;
 
 Cube cube;
-int size = 3;
+int size = 8;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
 int margin = 4;
+
+//f = (s - n)/2
+float[] cameraDistanceFactors = {9, 16, 19, 20, 25, 30, 35, 48, 55, 60};
+float[] scalingFactors =        {4, 7 , 8 , 8 , 10, 12, 14, 20, 23, 25};
 
 float[] cosTable = new float[360];
 float[] sinTable = new float[360];

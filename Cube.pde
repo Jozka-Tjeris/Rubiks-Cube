@@ -12,7 +12,7 @@ class Cube{
     for(int i = 0; i < disps.length; i++){
       blocks[i] = new Block(center, blockLength);
       removeNeighbors(blocks[i], disps[i], size);
-      blocks[i].setDistanceFromCenter(disps[i].mult(blockLength));
+      blocks[i].setDistanceFactorFromCenter(disps[i]);
     }
   }
   
@@ -54,7 +54,9 @@ class Cube{
       for(String f: faces){
         b.toggleFacesToShow(f, 0);
       }
-      b.setType("pers");
+      int i = 9;
+      b.setType("frame");
+      if(i == 9) b.setType("pers");
       b.show();
       //b.showColors();
     }
