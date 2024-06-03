@@ -12,11 +12,10 @@ boolean spacebarPressed = false;
 PFont f;
 
 Cube cube;
-int size = 8;
+int size = 3;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
-int margin = 4;
 
 //f = (s - n)/2
 float[] cameraDistanceFactors = {9, 16, 19, 20, 25, 30, 35, 48, 55, 60};
@@ -46,7 +45,7 @@ void setup(){
 }
 
 void draw(){
-  background(250);
+  background(200);
   
   cube.show();
   updateCubeRotationState();
@@ -136,6 +135,7 @@ float getSin(int angle){
 }
 
 //This project uses the CubeRotation Sketch as the foundation
+//Main video used as source: https://www.youtube.com/watch?v=p4Iz0XJY-Qk
 //CubeRotation notes:
 //27 May: Added graphics for points
 //28 May: Added lines to make box, added rotations, added directional axes, added the ability to offset the block
@@ -146,3 +146,5 @@ float getSin(int angle){
 //30 May: Corrected the display of the cube (selective face-rendering), removing unneccessary shapes
 //31 May: Added coloured tiles
 //1 Jun: Started to add weak perspective projection
+//2 Jun: Added weak perspective projection
+//3 Jun: Applied colored tiles using new weak perspective projection method

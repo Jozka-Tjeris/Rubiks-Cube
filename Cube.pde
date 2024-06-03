@@ -49,19 +49,19 @@ class Cube{
   void show(){
     String[] faces = blocks[0].findFacesToShow();
     
-    for(Block b: blocks){
-      b.resetFacesToShow();
-      for(String f: faces){
-        b.toggleFacesToShow(f, 0);
+    for(int i = faces.length - 1; i > -1; i--){
+      for(Block b: blocks){
+        if(b.toggleFacesToShow(faces[i], 1)){
+          b.showFace(Moves.valueOf(faces[i]));
+          b.showColor(Moves.valueOf(faces[i]));
+        }
       }
-      int i = 9;
-      b.setType("frame");
-      if(i == 9) b.setType("pers");
-      b.show();
-      //b.showColors();
     }
-    blocks[0].show();
     
+    //for(Block b: blocks){
+    //  b.drawFrame(true);
+    //}
+        
     axis.show();
     stroke(180, 0, 180);
     strokeWeight(10);

@@ -67,18 +67,11 @@ PVector[] applyPerspectiveProjection(PVector[] initialDisps, PVector distToCente
   
   for(int i = 0; i < initialDisps.length; i++){
     PVector normalizedVector = initialDisps[i].copy().add(distToCenter.copy().mult(2));
-    //println(normalizedVector);
     float z = 1 / (cameraDistanceFactors[size - 1] - normalizedVector.z);
-    float[][] projectionMatrix = {
-      {z, 0, 0},
-      {0, z, 0},
-      {0, 0, 1}
-    };
-    
-    resultDisps[i] = matrixToVector(matrixMult(projectionMatrix, vectorToMatrix(normalizedVector)));
-    resultDisps[i].mult(blockLengths[size - 1]*scalingFactors[size - 1]);
+
+    resultDisps[i] = normalizedVector.mult(z).mult(blockLengths[size - 1]*scalingFactors[size - 1]);
     resultDisps[i].x += center.x;
     resultDisps[i].y += center.y;
-  }  
+  } 
   return resultDisps;
 }
