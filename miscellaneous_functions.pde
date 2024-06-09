@@ -58,22 +58,19 @@ PVector crossProduct(PVector v1, PVector v2){
 
 PVector rotateAroundAxis(float rotationAmount, char rotationDirection, PVector pointToRotate){
   PVector returnVal = pointToRotate.copy();
-  float rotationCoefficient = 0;
+  float rotationCoefficient = getCos((int)rotationAmount);
     
   if(rotationDirection == 'x'){
-    rotationCoefficient = getCos((int)rotationAmount);
     PVector xAxis = new PVector(1, 0, 0).mult(getSin((int)rotationAmount));
     returnVal = rotateQ(rotationCoefficient, xAxis, returnVal);
   }
   
   if(rotationDirection == 'y'){
-    rotationCoefficient = getCos((int)rotationAmount);
     PVector yAxis = new PVector(0, 1, 0).mult(getSin((int)rotationAmount));
     returnVal = rotateQ(rotationCoefficient, yAxis, returnVal);
   }
  
  if(rotationDirection == 'z'){
-    rotationCoefficient = getCos((int)rotationAmount);
     PVector zAxis = new PVector(0, 0, 1).mult(getSin((int)rotationAmount));
     returnVal = rotateQ(rotationCoefficient, zAxis, returnVal);
   }
