@@ -1,9 +1,12 @@
 import java.util.Arrays;
 
 class Block{
-  PVector[] pointDisps = new PVector[8]; //TLB, TRB, BLB, BRB, TLF, TRF, BLF, BRF
+  PVector[] originalPointDisps = new PVector[8]; //TLB, TRB, BLB, BRB, TLF, TRF, BLF, BRF
+  PVector[] pointDisps = new PVector[8]; //Points before perspective projection
   PVector[] perspectivePoints = new PVector[8]; //Points after perspective projection
-  PVector[] interiorPoints = new PVector[8*3]; //Stores points for colored faces 
+  PVector[] originalInteriorPoints = new PVector[8*3]; //Stores points for colored faces (default position)
+  PVector[] interiorPoints = new PVector[8*3]; //Interior points before perspective projection
+  PVector[] projectedInteriorPoints = new PVector[8*3]; //Interior points after perspective projection
   //Each points has 3 different interior points: xy, xz, yz
   /*  
     Index to letter key:
@@ -15,52 +18,53 @@ class Block{
   PVector center = new PVector(0, 0, 0);
   PVector currCenter = new PVector(0, 0, 0);
   float sideLength = 0;
+  PVector originalDistToCenter = new PVector(0, 0, 0);
   PVector distToCenter = new PVector(0, 0, 0); //stores it as a multiple of sideLength, not absolute distance
   PVector rotation = new PVector(0, 0, 0);
   int[] sideColors = {-1, -1, -1, -1, -1, -1}; //U, D, R, L, F, B
                     //-1 = draw nothing, 0 = black square, 1 = black square with color inside
   ArrayList<String> neighbors = new ArrayList<String>();
   
+  void reset(){
+    pointDisps = originalPointDisps.clone();
+    interiorPoints = originalInteriorPoints.clone();
+    rotation = new PVector(0, 0, 0);
+    distToCenter = originalDistToCenter.copy();
+  }
     
-  Block(PVector v, float l){
+  Block(PVector v, float l, PVector distanceToCenter){
+    reset();
+    setDistanceFactorFromCenter(distanceToCenter);
     center = v.copy();
     sideLength = l;
     
     for(int i = 0; i < pointDisps.length; i++){
-      pointDisps[i] = new PVector(2*(i & 1) - 1, 
-                                  2*((i & 2) >> 1) - 1, 
-                                  2*((i & 4) >> 2) - 1);
+      originalPointDisps[i] = new PVector(2*(i & 1) - 1, 
+                                          2*((i & 2) >> 1) - 1, 
+                                          2*((i & 4) >> 2) - 1);
+      pointDisps[i] = originalPointDisps[i].copy();
     }
     
     neighbors.addAll(Arrays.asList("F", "B", "U", "D", "L", "R"));
     
-    PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
-    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter})[0];
-    perspectivePoints = applyPerspectiveProjection(resultDisps, centerDisps);
+    perspectivePoints = applyPerspectiveProjection(pointDisps, distToCenter);
     
     for(int i = 0; i < pointDisps.length; i++){
-      PVector smallerXY = pointDisps[i].copy();
-      smallerXY.x *= 0.9;
-      smallerXY.y *= 0.9;
-      PVector XYcolors = applyPerspectiveProjection(
-                            generateRotationVectors(rotation, new PVector[] {smallerXY}), centerDisps)[0];
-      
-      PVector smallerXZ = pointDisps[i].copy();
-      smallerXZ.x *= 0.9;
-      smallerXZ.z *= 0.9;
-      PVector XZcolors = applyPerspectiveProjection(
-                            generateRotationVectors(rotation, new PVector[] {smallerXZ}), centerDisps)[0];
-      
-      PVector smallerYZ = pointDisps[i].copy();
-      smallerYZ.y *= 0.9;
-      smallerYZ.z *= 0.9;
-      PVector YZcolors = applyPerspectiveProjection(
-                            generateRotationVectors(rotation, new PVector[] {smallerYZ}), centerDisps)[0];
+      PVector XYColors = new PVector(pointDisps[i].x * 0.9, pointDisps[i].y * 0.9, pointDisps[i].z);
+      PVector XZColors = new PVector(pointDisps[i].x * 0.9, pointDisps[i].y, pointDisps[i].z * 0.9);
+      PVector YZColors = new PVector(pointDisps[i].x, pointDisps[i].y * 0.9, pointDisps[i].z * 0.9);
             
-      interiorPoints[i*3] = XYcolors;
-      interiorPoints[i*3 + 1] = XZcolors;
-      interiorPoints[i*3 + 2] = YZcolors;
+      originalInteriorPoints[i*3] = XYColors;
+      interiorPoints[i*3] = XYColors.copy();
+
+      originalInteriorPoints[i*3 + 1] = XZColors;
+      interiorPoints[i*3 + 1] = XZColors.copy();
+
+      originalInteriorPoints[i*3 + 2] = YZColors;
+      interiorPoints[i*3 + 2] = YZColors.copy();
     }
+    
+    projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
   void removeNeighbor(String direction){
@@ -71,11 +75,11 @@ class Block{
   }
   
   void setDistanceFactorFromCenter(PVector v){
-    distToCenter = v.copy();
+    originalDistToCenter = v.copy();
+    distToCenter = originalDistToCenter.copy();
   }
   
   void showFace(Moves move){
-    //stroke(60);
     noStroke();
     fill(30);
     if(sideColors[5] >= 0 && move == Moves.B){
@@ -127,56 +131,56 @@ class Block{
     if(sideColors[5] >= 1 && move == Moves.B){
       //3.0.6.9, Z- Face (B)
       fill(0, 0, 240);
-      quad(interiorPoints[3].x, interiorPoints[3].y, 
-           interiorPoints[0].x, interiorPoints[0].y,
-           interiorPoints[6].x, interiorPoints[6].y,
-           interiorPoints[9].x, interiorPoints[9].y);
+      quad(projectedInteriorPoints[3].x, projectedInteriorPoints[3].y, 
+           projectedInteriorPoints[0].x, projectedInteriorPoints[0].y,
+           projectedInteriorPoints[6].x, projectedInteriorPoints[6].y,
+           projectedInteriorPoints[9].x, projectedInteriorPoints[9].y);
     }
     if(sideColors[4] >= 1 && move == Moves.F){
       //12.15.21.18, Z+ Face (F)
       fill(0, 240, 0);
-      quad(interiorPoints[12].x, interiorPoints[12].y, 
-           interiorPoints[15].x, interiorPoints[15].y,
-           interiorPoints[21].x, interiorPoints[21].y,
-           interiorPoints[18].x, interiorPoints[18].y);
+      quad(projectedInteriorPoints[12].x, projectedInteriorPoints[12].y, 
+           projectedInteriorPoints[15].x, projectedInteriorPoints[15].y,
+           projectedInteriorPoints[21].x, projectedInteriorPoints[21].y,
+           projectedInteriorPoints[18].x, projectedInteriorPoints[18].y);
     }
     if(sideColors[0] >= 1 && move == Moves.U){
       //1.4.16.13, Y- Face (U)
       fill(250, 250, 250);
-      quad(interiorPoints[1].x, interiorPoints[1].y, 
-           interiorPoints[4].x, interiorPoints[4].y,
-           interiorPoints[16].x, interiorPoints[16].y,
-           interiorPoints[13].x, interiorPoints[13].y);
+      quad(projectedInteriorPoints[1].x, projectedInteriorPoints[1].y, 
+           projectedInteriorPoints[4].x, projectedInteriorPoints[4].y,
+           projectedInteriorPoints[16].x, projectedInteriorPoints[16].y,
+           projectedInteriorPoints[13].x, projectedInteriorPoints[13].y);
     }
     if(sideColors[1] >= 1 && move == Moves.D){
       //19.22.10.7, Y+ Face (D)
       fill(240, 240, 0);
-      quad(interiorPoints[19].x, interiorPoints[19].y, 
-           interiorPoints[22].x, interiorPoints[22].y,
-           interiorPoints[10].x, interiorPoints[10].y,
-           interiorPoints[7].x, interiorPoints[7].y);
+      quad(projectedInteriorPoints[19].x, projectedInteriorPoints[19].y, 
+           projectedInteriorPoints[22].x, projectedInteriorPoints[22].y,
+           projectedInteriorPoints[10].x, projectedInteriorPoints[10].y,
+           projectedInteriorPoints[7].x, projectedInteriorPoints[7].y);
     }
     if(sideColors[3] >= 1 && move == Moves.L){
       //2.14.20.8, X- Face (L)
       fill(240, 120, 0);
-      quad(interiorPoints[2].x, interiorPoints[2].y, 
-           interiorPoints[14].x, interiorPoints[14].y,
-           interiorPoints[20].x, interiorPoints[20].y,
-           interiorPoints[8].x, interiorPoints[8].y);
+      quad(projectedInteriorPoints[2].x, projectedInteriorPoints[2].y, 
+           projectedInteriorPoints[14].x, projectedInteriorPoints[14].y,
+           projectedInteriorPoints[20].x, projectedInteriorPoints[20].y,
+           projectedInteriorPoints[8].x, projectedInteriorPoints[8].y);
     }
     if(sideColors[2] >= 1 && move == Moves.R){
       //17.5.11.23, X+ Face (R)
       fill(240, 0, 0);
-      quad(interiorPoints[17].x, interiorPoints[17].y, 
-           interiorPoints[5].x, interiorPoints[5].y,
-           interiorPoints[11].x, interiorPoints[11].y,
-           interiorPoints[23].x, interiorPoints[23].y);
+      quad(projectedInteriorPoints[17].x, projectedInteriorPoints[17].y, 
+           projectedInteriorPoints[5].x, projectedInteriorPoints[5].y,
+           projectedInteriorPoints[11].x, projectedInteriorPoints[11].y,
+           projectedInteriorPoints[23].x, projectedInteriorPoints[23].y);
     }
   }
   
   void drawFrame(boolean showTilePoints){
-    PVector[] tempDisps = generateRotationVectors(rotation, pointDisps.clone());
-    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter.copy().mult(sideLength)})[0];
+    PVector[] tempDisps = generateRotationVectors(rotation, originalPointDisps.clone());
+    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {originalDistToCenter.copy().mult(sideLength)})[0];
     PVector[] points = new PVector[8];
     for(int i = 0; i < pointDisps.length; i++){
       points[i] = center.copy().add(tempDisps[i].copy().mult(sideLength/2)).add(centerDisps);
@@ -211,14 +215,14 @@ class Block{
         noX.x = 0;
         PVector xDisabled = generateRotationVectors(rotation, new PVector[] {noX})[0].mult(margin);
               
-        interiorPoints[i*3] = points[i].copy().sub(zDisabled);
-        interiorPoints[i*3 + 1] = points[i].copy().sub(yDisabled);
-        interiorPoints[i*3 + 2] = points[i].copy().sub(xDisabled);
+        projectedInteriorPoints[i*3] = points[i].copy().sub(zDisabled);
+        projectedInteriorPoints[i*3 + 1] = points[i].copy().sub(yDisabled);
+        projectedInteriorPoints[i*3 + 2] = points[i].copy().sub(xDisabled);
       }
       
       stroke(255, 0, 0);
       strokeWeight(4);
-      for(PVector p: interiorPoints){
+      for(PVector p: projectedInteriorPoints){
         point(p.x, p.y);
       }
     }
@@ -281,13 +285,7 @@ class Block{
     return resultFaces;
   }
   
-  void resetDisplacement(){
-    rotation.x = 0;
-    rotation.y = 0;
-    rotation.z = 0;
-  }
-  
-  void transform(char direction, float amount){
+  void transform(char direction, int amount){
     if(direction == 'x') rotation.x = (rotation.x + amount) % 360;
     if(direction == 'y') rotation.y = (rotation.y + amount) % 360;
     if(direction == 'z') rotation.z = (rotation.z + amount) % 360;
@@ -298,35 +296,50 @@ class Block{
   }
   
   void update(){
-    PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
-    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {distToCenter.copy()})[0];
+    PVector[] resultDisps = generateRotationVectors(rotation, originalPointDisps);
+    PVector centerDisps = generateRotationVectors(rotation, new PVector[] {originalDistToCenter.copy()})[0];
     perspectivePoints = applyPerspectiveProjection(resultDisps, centerDisps);
     
     currCenter = center.copy().add(centerDisps).mult(sideLength);
     
     for(int i = 0; i < pointDisps.length; i++){
-      PVector smallerXY = pointDisps[i].copy();
+      PVector smallerXY = originalPointDisps[i].copy();
       smallerXY.x *= 0.9;
       smallerXY.y *= 0.9;
       PVector XYcolors = applyPerspectiveProjection(
                             generateRotationVectors(rotation, new PVector[] {smallerXY}), centerDisps)[0];
       
-      PVector smallerXZ = pointDisps[i].copy();
+      PVector smallerXZ = originalPointDisps[i].copy();
       smallerXZ.x *= 0.9;
       smallerXZ.z *= 0.9;
       PVector XZcolors = applyPerspectiveProjection(
                             generateRotationVectors(rotation, new PVector[] {smallerXZ}), centerDisps)[0];
       
-      PVector smallerYZ = pointDisps[i].copy();
+      PVector smallerYZ = originalPointDisps[i].copy();
       smallerYZ.y *= 0.9;
       smallerYZ.z *= 0.9;
       PVector YZcolors = applyPerspectiveProjection(
                             generateRotationVectors(rotation, new PVector[] {smallerYZ}), centerDisps)[0];
             
-      interiorPoints[i*3] = XYcolors;
-      interiorPoints[i*3 + 1] = XZcolors;
-      interiorPoints[i*3 + 2] = YZcolors;
+      projectedInteriorPoints[i*3] = XYcolors;
+      projectedInteriorPoints[i*3 + 1] = XZcolors;
+      projectedInteriorPoints[i*3 + 2] = YZcolors;
     }
+  }
+  
+  void updateQ(char direction, int amount){
+    distToCenter = rotateAroundAxis(amount, direction, distToCenter);
+    
+    for(int i = 0; i < pointDisps.length; i++){
+      pointDisps[i] = rotateAroundAxis(amount, direction, pointDisps[i]);
+    }
+    
+    for(int i = 0; i < interiorPoints.length; i++){
+      interiorPoints[i] = rotateAroundAxis(amount, direction, interiorPoints[i]);
+    }
+
+    perspectivePoints = applyPerspectiveProjection(pointDisps, distToCenter);
+    projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
   PVector getCenter(){

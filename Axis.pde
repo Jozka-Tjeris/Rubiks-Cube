@@ -1,5 +1,6 @@
 class Axis{
   PVector[] pointDisps = new PVector[6];
+  PVector[] originalPoints = new PVector[6];
   PVector[] points = new PVector[6];
   PVector center = new PVector(0, 0, 0);
   float axisLength = 0;
@@ -15,11 +16,13 @@ class Axis{
     pointDisps[3] = new PVector(0, 1, 0);
     pointDisps[4] = new PVector(0, 0, -1);
     pointDisps[5] = new PVector(0, 0, 1);
-
+    
     for(int i = 0; i < pointDisps.length; i++){
       //add distance to points based on the point disps, scaled by half its length
       points[i] = center.copy().add(pointDisps[i].copy().mult(l/2));
     }
+    
+    originalPoints = points.clone();
   }
   
   void show(){
@@ -57,6 +60,10 @@ class Axis{
     while(rotation.x < 0) rotation.x += 360;
     while(rotation.y < 0) rotation.y += 360;
     while(rotation.z < 0) rotation.z += 360;
+  }
+  
+  void setRotation(PVector n){
+    rotation = n;
   }
   
   void update(){

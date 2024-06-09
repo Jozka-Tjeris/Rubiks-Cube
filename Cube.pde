@@ -1,18 +1,16 @@
 class Cube{
   Block[] blocks;
-  PVector[] disps;
   Axis axis;
   
   Cube(int size, int blockLength){
     axis = new Axis(center, size*blockLength + 80);
     
     blocks = new Block[size*size*size];
-    disps = getNumbers(size);
+    PVector[] disps = getNumbers(size);
     
     for(int i = 0; i < disps.length; i++){
-      blocks[i] = new Block(center, blockLength);
+      blocks[i] = new Block(center, blockLength, disps[i]);
       removeNeighbors(blocks[i], disps[i], size);
-      blocks[i].setDistanceFactorFromCenter(disps[i]);
     }
   }
   
@@ -55,19 +53,16 @@ class Cube{
           b.showFace(Moves.valueOf(faces[i]));
           b.showColor(Moves.valueOf(faces[i]));
         }
+        //b.drawFrame(true);
       }
     }
-    
-    //for(Block b: blocks){
-    //  b.drawFrame(true);
-    //}
         
     axis.show();
     stroke(180, 0, 180);
     strokeWeight(10);
   }
   
-  void transform(char direction, float amount){
+  void transform(char direction, int amount){
     for(Block b: blocks){
       b.transform(direction, amount);
     }
@@ -79,13 +74,20 @@ class Cube{
     for(Block b: blocks){
       b.update();
     }
-    
+    axis.update();
+  }
+  
+  void updateQ(char direction, int amount){
+    for(Block b: blocks){
+      b.updateQ(direction, amount);
+    }
+    axis.setRotation(new PVector(15, 45, 0));
     axis.update();
   }
     
-  void resetDisplacement(){
+  void reset(){
     for(Block b: blocks){
-      b.resetDisplacement();
+      b.reset();
     }
     
     axis.resetDisplacement();

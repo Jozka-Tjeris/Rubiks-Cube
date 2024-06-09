@@ -9,10 +9,11 @@ boolean rightKeyPressed = false;
 boolean lessThanKeyPressed = false;
 boolean moreThanKeyPressed = false;
 boolean spacebarPressed = false;
+boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 3;
+int size = 2;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -23,6 +24,10 @@ float[] scalingFactors =        {4, 7 , 8 , 8 , 10, 12, 14, 20, 23, 25};
 
 float[] cosTable = new float[360];
 float[] sinTable = new float[360];
+
+PVector prevPos = new PVector(400, 400, 0);
+PVector currPos = new PVector(400, 400, 0);
+float scaleFactor = 0.9;
 
 void setup(){
   size(800, 800);
@@ -49,10 +54,35 @@ void draw(){
   
   cube.show();
   updateCubeRotationState();
-  cube.update();
+  //cube.update();
   
   showRotations();
+  
+  if(mouseHeldDown){
+    strokeWeight(8);
+    stroke(0);
+    point(mouseX, mouseY);
+  }
+  findAxis(mouseHeldDown);
+  
+  PVector point = new PVector(100, -100, 0);
+  float real = getSin(angle);
+  PVector axisRotation = new PVector(1, 1, 0);
+  axisRotation.normalize();
+  axisRotation.mult(getCos(angle));
+  
+  PVector res = rotateQ(real, axisRotation, point);
+  
+  //println(res);
+  
+  stroke(255, 255, 0);
+  strokeWeight(16);
+  point(res.x + center.x, res.y + center.y);
+  
+  angle = (angle + 1)%360;
 }
+int angle = 90;
+
 
 void keyPressed(){
   if(key == 'i') reversed = !reversed;
@@ -80,7 +110,7 @@ void keyPressed(){
     rotateX = false;
     rotateY = false;
     rotateZ = false;
-    cube.resetDisplacement();
+    cube.reset();
   }
 }
 
@@ -105,24 +135,54 @@ void showRotations(){
 }
 
 void updateCubeRotationState(){  
-  float amount = 1;
+  int amount = 1;
   if(reversed) amount = -1;
   
-  if(upKeyPressed) cube.transform('x', 1);
-  if(downKeyPressed) cube.transform('x', -1);
-  if(rightKeyPressed) cube.transform('y', 1);
-  if(leftKeyPressed) cube.transform('y', -1);
-  if(lessThanKeyPressed) cube.transform('z', -1);
-  if(moreThanKeyPressed) cube.transform('z', 1);
+  if(upKeyPressed){
+    cube.transform('x', 1);
+    cube.updateQ('x', 1);
+  }
+  if(downKeyPressed){
+    cube.transform('x', -1);
+    cube.updateQ('x', -1);
+  }
+  if(rightKeyPressed){
+    cube.transform('y', 1);
+    cube.updateQ('y', 1);
+  }
+  if(leftKeyPressed){
+    cube.transform('y', -1);
+    cube.updateQ('y', -1);
+  }
+  if(lessThanKeyPressed){
+    cube.transform('z', -1);
+    cube.updateQ('z', -1);
+  }
+  if(moreThanKeyPressed){
+    cube.transform('z', 1);
+    cube.updateQ('z', 1);
+  }
   
   if(spacebarPressed){
     cube.transform('x', amount);
+    cube.updateQ('x', amount);
     cube.transform('y', amount);
+    cube.updateQ('y', amount);
     cube.transform('z', amount);
+    cube.updateQ('z', amount);
   }else{
-    if(rotateX) cube.transform('x', amount);
-    if(rotateY) cube.transform('y', amount);
-    if(rotateZ) cube.transform('z', amount);
+    if(rotateX){
+      cube.transform('x', amount);
+      cube.updateQ('x', amount);
+    }
+    if(rotateY){
+      cube.transform('y', amount);
+      cube.updateQ('y', amount);
+    }
+    if(rotateZ){
+      cube.transform('z', amount);
+      cube.updateQ('z', amount);
+    }
   }
 }
 
@@ -133,6 +193,39 @@ float getCos(int angle){
 float getSin(int angle){
   return sinTable[(angle + 360) % 360];
 }
+
+void mousePressed(){
+  mouseHeldDown = true;
+}
+
+void mouseReleased(){
+  mouseHeldDown = false;
+}
+
+void findAxis(boolean hasNewPos){
+  currPos.x = mouseX;
+  currPos.y = mouseY;
+  
+  if(!hasNewPos){
+    prevPos.x = mouseX;
+    prevPos.y = mouseY;
+  }
+  
+  print("X" + (currPos.x - prevPos.x));
+  println(" Y" + (currPos.y - prevPos.y));
+  
+  int xDisp = (int)(currPos.x - prevPos.x)/2;
+  int yDisp = (int)(currPos.y - prevPos.y)/2;
+  
+  cube.transform('x', -yDisp);
+  cube.updateQ('x', -yDisp);
+  cube.transform('y', xDisp);  
+  cube.updateQ('y', xDisp);
+  
+  prevPos.x = currPos.x;
+  prevPos.y = currPos.y;
+}
+
 
 //This project uses the CubeRotation Sketch as the foundation
 //Main video used as source: https://www.youtube.com/watch?v=p4Iz0XJY-Qk
@@ -148,3 +241,5 @@ float getSin(int angle){
 //1 Jun: Started to add weak perspective projection
 //2 Jun: Added weak perspective projection
 //3 Jun: Applied colored tiles using new weak perspective projection method
+//7 Jun: Learning how proper 3D rotations work
+//9 Jun: Added proper 3D rotations

@@ -61,17 +61,3 @@ PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
   }
   return resultDisps;
 }
-
-PVector[] applyPerspectiveProjection(PVector[] initialDisps, PVector distToCenter){
-  PVector[] resultDisps = new PVector[initialDisps.length];
-  
-  for(int i = 0; i < initialDisps.length; i++){
-    PVector normalizedVector = initialDisps[i].copy().add(distToCenter.copy().mult(2));
-    float z = 1 / (cameraDistanceFactors[size - 1] - normalizedVector.z);
-
-    resultDisps[i] = normalizedVector.mult(z).mult(blockLengths[size - 1]*scalingFactors[size - 1]);
-    resultDisps[i].x += center.x;
-    resultDisps[i].y += center.y;
-  } 
-  return resultDisps;
-}
