@@ -58,22 +58,34 @@ PVector crossProduct(PVector v1, PVector v2){
 
 PVector rotateAroundAxis(float rotationAmount, char rotationDirection, PVector pointToRotate){
   PVector returnVal = pointToRotate.copy();
-  float rotationCoefficient = getCos((int)rotationAmount);
+  float rotationAmtHalf = rotationAmount * 0.5;
+  float rotationCoefficient = getCos(rotationAmtHalf);
     
   if(rotationDirection == 'x'){
-    PVector xAxis = new PVector(1, 0, 0).mult(getSin((int)rotationAmount));
+    PVector xAxis = new PVector(1, 0, 0).mult(getSin(rotationAmtHalf));
     returnVal = rotateQ(rotationCoefficient, xAxis, returnVal);
   }
   
   if(rotationDirection == 'y'){
-    PVector yAxis = new PVector(0, 1, 0).mult(getSin((int)rotationAmount));
+    PVector yAxis = new PVector(0, 1, 0).mult(getSin(rotationAmtHalf));
     returnVal = rotateQ(rotationCoefficient, yAxis, returnVal);
   }
  
  if(rotationDirection == 'z'){
-    PVector zAxis = new PVector(0, 0, 1).mult(getSin((int)rotationAmount));
+    PVector zAxis = new PVector(0, 0, 1).mult(getSin(rotationAmtHalf));
     returnVal = rotateQ(rotationCoefficient, zAxis, returnVal);
   }
+ 
+  return returnVal;
+}
+
+PVector rotateAroundCustomAxis(float rotationAmount, PVector axisOfRotation, PVector pointToRotate){
+  PVector returnVal = pointToRotate.copy();
+  float rotationAmtHalf = rotationAmount * 0.5;
+  float rotationCoefficient = getCos(rotationAmtHalf);
+ 
+  PVector customAxis = axisOfRotation.copy().mult(getSin(rotationAmtHalf));
+  returnVal = rotateQ(rotationCoefficient, customAxis, returnVal);
  
   return returnVal;
 }

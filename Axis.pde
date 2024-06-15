@@ -1,4 +1,5 @@
 class Axis{
+  PVector[] originalPointDisps = new PVector[6];
   PVector[] pointDisps = new PVector[6];
   PVector[] originalPoints = new PVector[6];
   PVector[] points = new PVector[6];
@@ -16,6 +17,8 @@ class Axis{
     pointDisps[3] = new PVector(0, 1, 0);
     pointDisps[4] = new PVector(0, 0, -1);
     pointDisps[5] = new PVector(0, 0, 1);
+    
+    originalPointDisps = pointDisps.clone();
     
     for(int i = 0; i < pointDisps.length; i++){
       //add distance to points based on the point disps, scaled by half its length
@@ -46,10 +49,10 @@ class Axis{
     }
   }
   
-  void resetDisplacement(){
-    rotation.x = 0;
-    rotation.y = 0;
-    rotation.z = 0;
+  void reset(){
+    rotation = new PVector(0, 0, 0);
+    pointDisps = originalPointDisps.clone();
+    points = originalPoints.clone();
   }
   
   void transform(char direction, float amount){
@@ -70,8 +73,21 @@ class Axis{
     PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
     
     for(int i = 0; i < pointDisps.length; i++){
-      //get center, add the result displacement generated from the rotation vector, scaled by half its length
       points[i] = center.copy().add(resultDisps[i].mult(axisLength/2));
+    }
+  }
+  
+  void updateQ(char direction, int amount){
+    for(int i = 0; i < pointDisps.length; i++){
+      pointDisps[i] = rotateAroundAxis(amount, direction, pointDisps[i]);
+      points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
+    }
+  }
+  
+  void updateQ(PVector axisOfRotation, int amount){
+    for(int i = 0; i < pointDisps.length; i++){
+      pointDisps[i] = rotateAroundCustomAxis(amount, axisOfRotation, pointDisps[i]);
+      points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
     }
   }
 }
