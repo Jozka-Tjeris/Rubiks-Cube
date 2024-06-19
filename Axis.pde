@@ -77,17 +77,35 @@ class Axis{
     }
   }
   
-  void updateQ(char direction, int amount){
+  void updateQXYZ(char direction, int amount){
     for(int i = 0; i < pointDisps.length; i++){
       pointDisps[i] = rotateAroundAxis(amount, direction, pointDisps[i]);
       points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
     }
   }
   
-  void updateQ(PVector axisOfRotation, int amount){
+  void updateQAroundAxis(PVector axisOfRotation, int amount){
     for(int i = 0; i < pointDisps.length; i++){
       pointDisps[i] = rotateAroundCustomAxis(amount, axisOfRotation, pointDisps[i]);
       points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
     }
+  }
+  
+  PVector getAxisOfRotation(char direction, boolean flipped){
+    switch(direction){
+      case 'x':
+        PVector xAxis = points[1].copy().sub(points[0].copy()).normalize();
+        if(flipped) xAxis.mult(-1);
+        return xAxis;
+      case 'y':
+        PVector yAxis = points[3].copy().sub(points[2].copy()).normalize();
+        if(flipped) yAxis.mult(-1);
+        return yAxis;
+      case 'z':
+        PVector zAxis = points[5].copy().sub(points[4].copy()).normalize();
+        if(flipped) zAxis.mult(-1);
+        return zAxis;
+    }
+    return new PVector(0, 0, 0);
   }
 }

@@ -2,6 +2,7 @@ class PieceGroup{
   ArrayList<Block> pieces;
   PieceType groupType;
   String[] facesToShow;
+  boolean reverseOrder = false;
   PVector position = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
   
   PieceGroup(PieceType type, String[] faces){
@@ -46,11 +47,17 @@ class PieceGroup{
     }
   }
   
-  void reverseList(){
-    ArrayList<Block> newPieces = new ArrayList<Block>();
-    for(int i = pieces.size() - 1; i >= 0; i--){
-      newPieces.add(pieces.get(i));
+  void reverseList(boolean state){
+    reverseOrder = state;
+  }
+  
+  void rotateGroup(PVector axisOfRotation){
+    for(Block b: pieces){
+      b.updateQAroundAxis(axisOfRotation, 1);
     }
-    pieces = newPieces;
+  }
+  
+  void toggleFacesZero(char face){
+    
   }
 }

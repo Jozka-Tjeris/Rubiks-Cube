@@ -1,10 +1,14 @@
+import java.util.LinkedList;
+
 class Cube{
   int cubeSize;
   Block[] blocks;
   Axis axis;
   HashMap<String, PieceGroup> blockGroups = new HashMap<String, PieceGroup>();
   ArrayList<PieceGroup> displayOrder = new ArrayList<PieceGroup>();
-
+  LinkedList<Moves> moveQueue = new LinkedList<Moves>();
+  int moveAnimationCounter = 0;
+  String currMove = " ";
   
   Cube(int size, int blockLength){
     cubeSize = size;
@@ -69,42 +73,6 @@ class Cube{
   }
   
   void show(){
-    //ArrayList<Block> stationaryBlocks = new ArrayList<Block>();
-    //ArrayList<Block> movingBlocks = new ArrayList<Block>();
-    
-    //for(Block b: blocks){
-    //  if(!b.isMoving) stationaryBlocks.add(b);
-    //  else movingBlocks.add(b);
-    //}
-    
-    
-    //if(stationaryBlocks.size() > 0){
-    //  String[] stationaryFaces = stationaryBlocks.get(0).findFacesToShow();
-    //  //stationaryFaces = new String[] {"F", "B", "U", "L", "R", "D"};
-    //  for(int i = stationaryFaces.length - 1; i > -1; i--){
-    //    for(Block b: stationaryBlocks){
-    //      if(b.toggleFacesToShow(stationaryFaces[i], 1)){
-    //        b.showFace(Moves.valueOf(stationaryFaces[i]));
-    //        //b.showColor(Moves.valueOf(stationaryFaces[i]));
-    //      }
-    //      //b.drawFrame(true);
-    //    }
-    // }
-    //}
-
-    //if(movingBlocks.size() > 0){
-    //  String[] movingFaces = movingBlocks.get(0).findFacesToShow();
-    //  for(int i = movingFaces.length - 1; i > -1; i--){
-    //    for(Block b: movingBlocks){
-    //      if(b.toggleFacesToShow(movingFaces[i], 1)){
-    //        b.showFace(Moves.valueOf(movingFaces[i]));
-    //        b.showColor(Moves.valueOf(movingFaces[i]));
-    //      }
-    //      //b.drawFrame(true);
-    //    }
-    //  }
-    //}
-    
     for(PieceGroup g: displayOrder){ 
       g.drawBlocks();
     }
@@ -126,12 +94,29 @@ class Cube{
     axis.update();
   }
   
+  void updateMoves(){
+    if(!"FBUDLR".contains(currMove) && moveQueue.size() > 0){
+      currMove = moveQueue.removeFirst().name();
+    }
+    if("FBUDLR".contains(currMove)){
+      if(moveAnimationCounter < 90){
+        moveAnimationCounter++;
+        turnFace(Moves.valueOf(currMove), 0);
+      }else{
+        moveAnimationCounter = 0;
+        shuffleBlocks(Moves.valueOf(currMove), 0);
+        currMove = " ";
+      }
+    }
+  }
+  
   void updateState(char direction, int amount){
     for(Block b: blocks){
       b.transform(direction, amount);
       b.updateQXYZ(direction, amount);
     }
-    axis.updateQ(direction, amount);
+    axis.updateQXYZ(direction, amount);
+    generateDisplayOrder();
   }
     
   void reset(){
@@ -179,41 +164,162 @@ class Cube{
   }
   
   void toggleMovingBlock(int index, boolean state){
-    if(index < 0 || index > blocks.length){
+    if(index < 0 || index >= blocks.length){
       return;
     }
     
     blocks[index].isMoving = state;
   }
   
-  void resetMovingBlocks(){
-    for(Block b: blocks){
-      b.isMoving = false;
-    }
-  }
-  
-  void turnFace(){
-    PVector xAxisOfRotation = axis.points[1].copy().sub(axis.points[0].copy()).normalize();
-    PVector yAxisOfRotation = axis.points[3].copy().sub(axis.points[2].copy()).normalize();
-    PVector zAxisOfRotation = axis.points[5].copy().sub(axis.points[4].copy()).normalize();
+  void turnFace(Moves faceToTurn, int layer){
+    if(layer < 0) layer = 0;
+    if(layer >= cubeSize) layer = cubeSize - 1;
 
-    for(int i = 0; i < 9; i++){
-      blocks[i].updateQAroundAxis(zAxisOfRotation, 1);
-      blocks[i].toggleFacesToShow("F", 0);
-      blocks[i].showFace(Moves.F);
-      blocks[i + 9].toggleFacesToShow("B", 0);
-      blocks[i + 9].showFace(Moves.B);
+    Turn turn = new Turn(cubeSize, layer, faceToTurn);
+    turn.setAxis(faceToTurn, axis);
+  
+    for(int r = 0; r < cubeSize; r++){
+      for(int i = 0; i < cubeSize; i++){
+        int index = turn.d*turn.cd + r*turn.cr + i*turn.ci;
+        toggleMovingBlock(index, true);
+        blocks[index].updateQAroundAxis(turn.axisOfRotation, 1);
+        //blocks[index].toggleFacesToShow(turn.oppFace, 0);
+        //blocks[index].showFace(Moves.valueOf(turn.oppFace));
+        //blocks[index + turn.diff].toggleFacesToShow(turn.faceToTurn, 0);
+        //blocks[index + turn.diff].showFace(Moves.valueOf(turn.faceToTurn));
+      }
     }
   }
   
-  void shuffleBlocks(){
-    int[] order1 = {2, 0, 6, 8};
-    int[] order2 = {1, 3, 7, 5};
+  /*
+  Faces to target: (d is depth layer), Start by directly facing the center of the face to rotate
+  Note: d can be anywhere from 0 to n - 1,
+  Note: i and r starts at 0 (i0 and r0), goes to n - 1 (i1 and r1)
+  Note: var' = n - var - 1
+  
+  B: (Blue)
+  [d*n*n + r0*n + i0', d*n*n + r0*n + i1']
+  ...
+  [d*n*n + r1*n + i0', d*n*n + r1*n + i1']
+  
+  Ex: (d = 0)
+  [04, 03, 02, 01, 00]
+  [09, 08, 07, 06, 05]
+  [14, 13, 12, 11, 10]
+  [19, 18, 17, 16, 15]
+  [24, 23, 22, 21, 20]
+  
+  F: (Green)
+  [d'*n*n + r0*n + i0, d'*n*n + r0*n + i1]
+  ...
+  [d'*n*n + r1*n + i0, d'*n*n + r1*n + i1]
+  
+  Ex: (d = 0)
+  [100, 101, 102, 103, 104]
+  [105, 106, 107, 108, 109]
+  [110, 111, 112, 113, 114]
+  [115, 116, 117, 118, 119]
+  [120, 121, 122, 123, 124]
+  
+  R: (Red)
+  [d' + r0*n + i0'*n*n, d' + r0*n + i1'*n*n]
+  ...
+  [d' + r1*n + i1'*n*n, d' + r1*n + i1'*n*n]
+  
+  Ex: (d = 0)
+  [104, 79, 54, 29, 04]
+  [109, 84, 59, 34, 09]
+  [114, 89, 64, 39, 14]
+  [119, 94, 69, 44, 19]
+  [124, 99, 74, 49, 24]
+  
+  L: (Orange)
+  [d + r0*n + i0*n*n, d + r0*n + i1*n*n]
+  ...
+  [d + r1*n + i0*n*n, d + r1*n + i1*n*n]
+  
+  Ex: (d = 0)
+  [00, 25, 50, 75, 100]
+  [05, 30, 55, 80, 105]
+  [10, 35, 60, 85, 110]
+  [15, 40, 65, 90, 115]
+  [20, 45, 70, 95, 120]
+  
+  U: (White)
+  [d*n + r0*n*n + i0, d + r0*n*n + i1]
+  ...
+  [d*n + r1*n*n + i0, d + r1*n*n + i1]
+  
+  Ex: (d = 0)
+  [000, 001, 002, 003, 004]
+  [025, 026, 027, 028, 029]
+  [050, 051, 052, 053, 054]
+  [075, 076, 077, 078, 079]
+  [100, 101, 102, 103, 104]
+  
+  D: (Yellow)
+  [d'*n + r0'*n*n + i0, d'*n + r0'*n*n + i1]
+  ...
+  [d'*n + r1'*n*n + i0, d'*n + r1'*n*n + i1]
+  
+  Ex: (d = 0)
+  [120, 121 ,122, 123, 124]
+  [095, 096, 097, 098, 099]
+  [070, 071, 072, 073, 074]
+  [045, 046, 047, 048, 049]
+  [020, 021, 022, 023, 024]
+  */
+  
+  void shuffleBlocks(Moves face, int layer){
+    int[][] initPosArr = new int[cubeSize][cubeSize];
+    Turn turn = new Turn(cubeSize, layer, face);
     
-    for(int i = 0; i < order1.length - 1; i++){
-      swapBlocks(blocks, order1[i], order1[(i + 1) % order1.length]);
-      swapBlocks(blocks, order2[i], order2[(i + 1) % order2.length]);
+    for(int r = 0; r < cubeSize; r++){
+      for(int i = 0; i < cubeSize; i++){
+        initPosArr[r][i] = turn.d* turn.cd;
+        
+        if(turn.rInv) initPosArr[r][i] += (cubeSize - r - 1)* turn.cr;
+        else initPosArr[r][i] += r* turn.cr;
+        
+        if(turn.iInv) initPosArr[r][i] += (cubeSize - i - 1)* turn.ci;
+        else initPosArr[r][i] += i* turn.ci;
+      }
+    }    
+    
+    int[][] arrTranspose = new int[cubeSize][cubeSize];
+    int[][] arrVFlipped = new int[cubeSize][cubeSize];
+    
+    for(int i = 0; i < cubeSize; i++){
+      for(int j = 0; j < cubeSize; j++){
+        arrTranspose[i][j] = initPosArr[j][i];
+      }
     }
+    
+    for(int i = 0; i < cubeSize; i++){
+      for(int j = 0; j < cubeSize; j++){
+        arrVFlipped[i][j] = arrTranspose[i][cubeSize - j - 1];
+      }
+    }
+    
+    Block[][] blockArr = new Block[cubeSize][cubeSize];
+    
+    for(int i = 0; i < cubeSize; i++){
+      for(int j = 0; j < cubeSize; j++){
+        blockArr[i][j] = blocks[arrVFlipped[i][j]];
+        toggleMovingBlock(arrVFlipped[i][j], false);
+      }
+    }
+    
+    for(int i = 0; i < cubeSize; i++){
+      for(int j = 0; j < cubeSize; j++){
+        blocks[initPosArr[i][j]] = blockArr[i][j];
+      }
+    }
+  }
+  
+  void addMove(Moves m){
+    moveQueue.add(m);
+    println(moveQueue);
   }
   
   void generateDisplayOrder(){
@@ -245,15 +351,13 @@ class Cube{
       if(cubeSize > 3 && currGroup.groupType == PieceType.Edge){
         if(currGroup.pieces.get(0).distToCenter.z > 
            currGroup.pieces.get(currGroup.pieces.size() - 1).distToCenter.z){
-          currGroup.reverseList();
+          currGroup.reverseList(true);
+        }else{
+          currGroup.reverseList(false);
         }
       }
     }
     
     displayOrder = res;
   }
-}
-
-float get2DLength(PVector p){
-  return p.x*p.x + p.y*p.y;
 }

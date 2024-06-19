@@ -89,3 +89,24 @@ PVector rotateAroundCustomAxis(float rotationAmount, PVector axisOfRotation, PVe
  
   return returnVal;
 }
+
+float get2DLength(PVector p){
+  return p.x*p.x + p.y*p.y;
+}
+
+void swapBlocks(Block[] arr, int a, int b){
+  if(a < 0 || b < 0 || a >= arr.length || b >= arr.length){
+    return;
+  }
+  Block temp = arr[a];
+  arr[a] = arr[b];
+  arr[b] = temp;
+}
+
+float getCos(float angle){
+  return cosTable[(int)(angle*2 + 360) % 360];
+}
+
+float getSin(float angle){
+  return sinTable[(int)(angle*2 + 360) % 360];
+}

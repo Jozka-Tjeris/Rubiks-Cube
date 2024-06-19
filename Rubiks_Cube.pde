@@ -13,7 +13,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 9;
+int size = 5;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -58,8 +58,8 @@ void draw(){
   
   cube.show();
   updateCubeRotationState();
-  cube.resetMovingBlocks();
   showRotations();
+  cube.updateMoves();
   
   if(mouseHeldDown){
     strokeWeight(8);
@@ -67,21 +67,6 @@ void draw(){
     point(mouseX, mouseY);
   }
   findAxis(mouseHeldDown);
-  
-  if(uKey){
-    if(movingCounter < 90){
-      movingCounter++;
-      for(int i = 0; i < 9; i++){
-        cube.toggleMovingBlock(i, true);
-      }
-      cube.turnFace();
-    }
-    else{
-      movingCounter = 0;
-      uKey = false;
-      cube.shuffleBlocks();
-    }
-  }
 
   stroke(0);
   strokeWeight(12);
@@ -91,7 +76,7 @@ void draw(){
   cube.displayOrder.get(idx).flipAll(true);
   
   stroke(255, 255, 0);
-  point(cube.blocks[idx].perspectivePoints[0].x, cube.blocks[idx].perspectivePoints[0].y);
+  point(cube.blocks[1].perspectivePoints[0].x, cube.blocks[1].perspectivePoints[0].y);
 }
 
 void keyPressed(){
@@ -115,17 +100,20 @@ void keyPressed(){
   if(key == ',') lessThanKeyPressed = true;
   if(key == '.') moreThanKeyPressed = true;
   
-  if(key == 'r'){
+  if(keyCode == BACKSPACE){
     spacebarPressed = false;
     rotateX = false;
     rotateY = false;
     rotateZ = false;
     cube.reset();
   }
-  
-  if(key == 'u'){
-    uKey = !uKey;
-  }
+
+  if(key == 'u') cube.addMove(Moves.U);
+  if(key == 'd') cube.addMove(Moves.D);
+  if(key == 'f') cube.addMove(Moves.F);
+  if(key == 'b') cube.addMove(Moves.B);
+  if(key == 'l') cube.addMove(Moves.L);
+  if(key == 'r') cube.addMove(Moves.R);
   
   if(key == 'q'){
     idx = (idx + 1) % cube.displayOrder.size();
@@ -137,8 +125,6 @@ void keyPressed(){
     cube.generateDisplayOrder();
   }
 }
-
-boolean uKey;
 
 void keyReleased(){
   if(keyCode == UP) upKeyPressed = false;
@@ -183,14 +169,6 @@ void updateCubeRotationState(){
   }
 }
 
-float getCos(float angle){
-  return cosTable[(int)(angle*2 + 360) % 360];
-}
-
-float getSin(float angle){
-  return sinTable[(int)(angle*2 + 360) % 360];
-}
-
 void mousePressed(){
   mouseHeldDown = true;
 }
@@ -218,16 +196,6 @@ void findAxis(boolean hasNewPos){
   prevPos.y = currPos.y;
 }
 
-void swapBlocks(Block[] arr, int a, int b){
-  if(a < 0 || b < 0 || a >= arr.length || b >= arr.length){
-    return;
-  }
-  Block temp = arr[a];
-  arr[a] = arr[b];
-  arr[b] = temp;
-}
-
-
 //This project uses the CubeRotation Sketch as the foundation
 //Main video used as source: https://www.youtube.com/watch?v=p4Iz0XJY-Qk
 //CubeRotation notes:
@@ -245,3 +213,7 @@ void swapBlocks(Block[] arr, int a, int b){
 //7 Jun: Learning how proper 3D rotations work
 //9 Jun: Added proper 3D rotations
 //14 & 15 Jun: Overhauled the cube display algorithm to facilitate turns
+//16 Jun: Added surface-level turns (without reference switching)
+//17 Jun: Added Turn class (Cleaned up code)
+//18 Jun: Added reference switching (allowing turns on multiple faces)
+//19 Jun: Refactored some code (reference switching)
