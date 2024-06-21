@@ -24,14 +24,13 @@ class Block{
   int[] sideColors = {-1, -1, -1, -1, -1, -1}; //U, D, R, L, F, B
                     //-1 = draw nothing, 0 = black square, 1 = black square with color inside
   ArrayList<String> neighbors = new ArrayList<String>();
-  int idNumber = 0;
+  ArrayList<String> facesToShow = new ArrayList<String>();
   boolean isMoving = false;
       
-  Block(PVector v, float l, PVector distanceToCenter, int number){
+  Block(PVector v, float l, PVector distanceToCenter){
     setDistanceFactorFromCenter(distanceToCenter);
     center = v.copy();
     sideLength = l;
-    idNumber = number;
     
     for(int i = 0; i < pointDisps.length; i++){
       originalPointDisps[i] = new PVector(2*(i & 1) - 1, 
@@ -68,16 +67,6 @@ class Block{
     projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
-  void swapID(Block other){
-    if(other == null){
-      return;
-    }
-    
-    int temp = other.idNumber;
-    other.idNumber = this.idNumber;
-    this.idNumber = temp;
-  }
-  
   void reset(){
     pointDisps = originalPointDisps.clone();
     interiorPoints = originalInteriorPoints.clone();
@@ -86,10 +75,11 @@ class Block{
   }
   
   void removeNeighbor(String direction){
-    if(!"FBUDLR".contains(direction)){
+    if(!Moves.getAllFaces().contains(direction)){
       return;
     }
     neighbors.remove(direction);
+    facesToShow.add(direction);
   }
   
   void setDistanceFactorFromCenter(PVector v){
@@ -275,10 +265,10 @@ class Block{
     return false;
   }
   
-  String[] findFacesToShow(String[] facesToConsider){
+  String[] findFacesToShow(){
     HashMap<Moves, Float>zValues = new HashMap<Moves, Float>();
     
-    for(String s: facesToConsider){
+    for(String s: facesToShow){
       zValues.put(Moves.valueOf(s), getZDepth(s));
     }
     

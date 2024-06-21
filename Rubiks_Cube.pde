@@ -68,15 +68,14 @@ void draw(){
   }
   findAxis(mouseHeldDown);
 
-  stroke(0);
-  strokeWeight(12);
-  point(cube.displayOrder.get(idx).position.x * blockLengths[size - 1] + 400, 
-        cube.displayOrder.get(idx).position.y * blockLengths[size - 1] + 400);
-  
-  cube.displayOrder.get(idx).flipAll(true);
-  
   stroke(255, 255, 0);
-  point(cube.blocks[1].perspectivePoints[0].x, cube.blocks[1].perspectivePoints[0].y);
+  strokeWeight(12);
+  //point(cube.displayOrder.get(idx).position.x * blockLengths[size - 1] + 400, 
+        //cube.displayOrder.get(idx).position.y * blockLengths[size - 1] + 400);
+  
+  cube.displayOrder.get(idx).flipAll(cube, true);
+  
+  point(cube.blocks[0].perspectivePoints[0].x, cube.blocks[0].perspectivePoints[0].y);
 }
 
 void keyPressed(){
@@ -217,3 +216,4 @@ void findAxis(boolean hasNewPos){
 //17 Jun: Added Turn class (Cleaned up code)
 //18 Jun: Added reference switching (allowing turns on multiple faces)
 //19 Jun: Refactored some code (reference switching)
+//20-22 Jun: Added slices (turns on inner layers)

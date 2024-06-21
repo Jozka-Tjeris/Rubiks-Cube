@@ -1,63 +1,64 @@
 class PieceGroup{
-  ArrayList<Block> pieces;
+  ArrayList<Integer> indexList = new ArrayList<Integer>();
   PieceType groupType;
   String[] facesToShow;
   boolean reverseOrder = false;
   PVector position = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
   
   PieceGroup(PieceType type, String[] faces){
-    pieces = new ArrayList<Block>();
     groupType = type;
     facesToShow = faces;
   }
   
-  void addBlock(Block b){
-    pieces.add(b);
+  void addBlockIdx(int b){
+    indexList.add(b);
   }
-  
+    
   String getFacesAsString(){
     String s = "";
     for(String c: facesToShow) s += c;
     return s;
   }
   
-  void setPosition(){
+  void setPosition(Cube c){
     PVector sumPos = new PVector(0, 0, 0);
-    for(Block b: pieces) sumPos.add(b.distToCenter.copy());
+    for(int idx: indexList) sumPos.add(c.blocks[idx].distToCenter.copy());
     
-    position = sumPos.div(pieces.size()).copy();
+    position = sumPos.div(indexList.size()).copy();
   }
   
-  void flipAll(boolean state){
-    for(Block b: pieces){
-      b.flipped = state;
+  void flipAll(Cube c, boolean state){
+    for(int idx: indexList){
+      c.blocks[idx].flipped = state;
     }
   }
   
-  void drawBlocks(){
-    String[] faces = pieces.get(0).findFacesToShow(facesToShow);
-
-    for(String f: faces){
-      for(Block b: pieces){
-        if(b.toggleFacesToShow(f, 1)){
-          b.showFace(Moves.valueOf(f));
-          b.showColor(Moves.valueOf(f));
+  void drawBlocks(Cube c){    
+    ArrayList<String[]> faces = new ArrayList<String[]>();
+    ArrayList<Integer> indexes = new ArrayList<Integer>();
+    
+    for(int idx: indexList){
+      faces.add(c.blocks[idx].findFacesToShow());
+      indexes.add(idx);
+    }
+    
+    for(int i = 0; i < faces.get(0).length; i++){
+      for(int j = 0; j < faces.size(); j++){
+        String f = faces.get(j)[i];
+        if(c.blocks[indexes.get(j)].toggleFacesToShow(f, 1)){
+          c.blocks[indexes.get(j)].showFace(Moves.valueOf(f));
+          c.blocks[indexes.get(j)].showColor(Moves.valueOf(f));
         }
       }
     }
   }
-  
-  void reverseList(boolean state){
-    reverseOrder = state;
-  }
-  
-  void rotateGroup(PVector axisOfRotation){
-    for(Block b: pieces){
-      b.updateQAroundAxis(axisOfRotation, 1);
-    }
-  }
-  
-  void toggleFacesZero(char face){
-    
-  }
 }
+
+/*
+keep an array of indexes that represent the block array's original indexes (their true IDs / reference numbers)
+after switching the references, look up the blocks array using those indices
+and replace the list of blocks with the new IDs.
+
+Note: improve efficiency by only changing pieceGroups that were affected during the turn.
+Maybe ignore the internal pieces, as their display rules don't change when turning
+*/

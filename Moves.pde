@@ -24,4 +24,8 @@ enum Moves{
     println("Invalid face specified");
     return "";
   }
+  
+  public static String getAllFaces(){
+    return "FBUDLR";
+  }
 }
