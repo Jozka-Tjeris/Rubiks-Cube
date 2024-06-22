@@ -9,33 +9,28 @@ class Cube{
   LinkedList<Moves> moveQueue = new LinkedList<Moves>();
   int moveAnimationCounter = 0;
   String currMove = " ";
+  PVector[] originalBlockDisps;
   
   Cube(int size, int blockLength){
     cubeSize = size;
     axis = new Axis(center, size*blockLength + 80);
-    
     blocks = new Block[size*size*size];
-    PVector[] disps = getNumbers(size);
+    originalBlockDisps = getNumbers(size);
     
-    for(int i = 0; i < disps.length; i++){
-      blocks[i] = new Block(center, blockLength, disps[i]);
-      removeNeighbors(blocks[i], disps[i], size);
+    for(int i = 0; i < originalBlockDisps.length; i++){
+      blocks[i] = new Block(center, blockLength, originalBlockDisps[i].copy());
+      removeNeighbors(blocks[i], originalBlockDisps[i], size);
       
       String facesToShow = getFacesToShow(blocks[i]);
       if(!blockGroups.containsKey(facesToShow)){
         String[] faceArray = new String[0];
-        if(facesToShow != ""){
-          faceArray = facesToShow.split("");
-        }
+        if(facesToShow != "") faceArray = facesToShow.split("");
         blockGroups.put(facesToShow, new PieceGroup(PieceType.getType(facesToShow), faceArray));
       }
       blockGroups.get(facesToShow).addBlockIdx(i);
     }
     
-    for(String s: blockGroups.keySet()){
-      blockGroups.get(s).setPosition(this);
-    }
-    
+    for(String s: blockGroups.keySet()) blockGroups.get(s).setPosition(this);
     generateDisplayOrder();
   }
   
@@ -43,14 +38,8 @@ class Cube{
     String res = "";
     ArrayList<String> faces = new ArrayList<String>();
     faces.addAll(Arrays.asList("F", "B", "U", "D", "L", "R"));
-    for(String s: b.neighbors){
-      faces.remove(s);
-    }
-    
-    for(String s: faces){
-      res += s;
-    }
-    
+    for(String s: b.neighbors) faces.remove(s);
+    for(String s: faces) res += s;
     return res;
   }
   
@@ -87,13 +76,6 @@ class Cube{
     axis.transform(direction, amount);
   }
   
-  void update(){
-    for(Block b: blocks){
-      b.update();
-    }
-    axis.update();
-  }
-  
   void updateMoves(){
     if(!Moves.getAllFaces().contains(currMove) && moveQueue.size() > 0){
       currMove = moveQueue.removeFirst().name();
@@ -119,18 +101,20 @@ class Cube{
     generateDisplayOrder();
   }
     
-  void reset(){
-    for(Block b: blocks){
-      b.reset();
+  void reset(){    
+    for(int i = 0; i < originalBlockDisps.length; i++){
+      blocks[i] = new Block(center, cubeSize, originalBlockDisps[i].copy());
+      removeNeighbors(blocks[i], originalBlockDisps[i], size);
+      
+      String facesToShow = getFacesToShow(blocks[i]);
+      blockGroups.get(facesToShow).addBlockIdx(i);
     }
     
     axis.reset();
   }
   
   PVector[] getNumbers(int base){
-    if(base < 1){
-      return null;
-    }
+    if(base < 1) return null;
     ArrayList<PVector> disps = new ArrayList<PVector>();
     int offset = (int)Math.floor(base/2.0f);
     int adjustedBase = base + ((base + 1) % 2);
@@ -164,10 +148,7 @@ class Cube{
   }
   
   void toggleMovingBlock(int index, boolean state){
-    if(index < 0 || index >= blocks.length){
-      return;
-    }
-    
+    if(index < 0 || index >= blocks.length) return;    
     blocks[index].isMoving = state;
   }
   
@@ -276,13 +257,11 @@ class Cube{
     
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
-        initPosArr[r][i] = turn.d* turn.cd;
+        int dIdx = turn.d * turn.cd;
+        int rIdx = turn.rInv ? (cubeSize - r - 1)* turn.cr : r* turn.cr;
+        int iIdx = turn.iInv ? (cubeSize - i - 1)* turn.ci : i* turn.ci;
         
-        if(turn.rInv) initPosArr[r][i] += (cubeSize - r - 1)* turn.cr;
-        else initPosArr[r][i] += r* turn.cr;
-        
-        if(turn.iInv) initPosArr[r][i] += (cubeSize - i - 1)* turn.ci;
-        else initPosArr[r][i] += i* turn.ci;
+        initPosArr[r][i] = dIdx + rIdx + iIdx;
       }
     }
     
@@ -305,9 +284,8 @@ class Cube{
     
     for(int i = 0; i < cubeSize; i++){
       for(int j = 0; j < cubeSize; j++){
-        int idx = arrVFlipped[i][j];
-        blockArr[i][j] = blocks[idx];
-        toggleMovingBlock(idx, false);
+        blockArr[i][j] = blocks[arrVFlipped[i][j]];
+        toggleMovingBlock(arrVFlipped[i][j], false);
       }
     }
     
@@ -336,10 +314,7 @@ class Cube{
       PieceGroup currGroup = new PieceGroup(PieceType.Internal, null);
       for(String s: blockGroupsCopy.keySet()){
         if(abs(blockGroupsCopy.get(s).position.z - currGroup.position.z) < marginOfErrors[cubeSize - 1]){
-          float len1 = get2DLength(blockGroupsCopy.get(s).position);     
-          float len2 = get2DLength(currGroup.position);
-                       
-          if(len1 > len2){
+          if(get2DLength(blockGroupsCopy.get(s).position) > get2DLength(currGroup.position)){
             currGroup = blockGroupsCopy.get(s);
           }
         }

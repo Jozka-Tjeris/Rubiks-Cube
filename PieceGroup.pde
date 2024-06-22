@@ -2,7 +2,6 @@ class PieceGroup{
   ArrayList<Integer> indexList = new ArrayList<Integer>();
   PieceType groupType;
   String[] facesToShow;
-  boolean reverseOrder = false;
   PVector position = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
   
   PieceGroup(PieceType type, String[] faces){
@@ -53,12 +52,3 @@ class PieceGroup{
     }
   }
 }
-
-/*
-keep an array of indexes that represent the block array's original indexes (their true IDs / reference numbers)
-after switching the references, look up the blocks array using those indices
-and replace the list of blocks with the new IDs.
-
-Note: improve efficiency by only changing pieceGroups that were affected during the turn.
-Maybe ignore the internal pieces, as their display rules don't change when turning
-*/

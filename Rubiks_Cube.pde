@@ -13,7 +13,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 5;
+int size = 3;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -216,4 +216,5 @@ void findAxis(boolean hasNewPos){
 //17 Jun: Added Turn class (Cleaned up code)
 //18 Jun: Added reference switching (allowing turns on multiple faces)
 //19 Jun: Refactored some code (reference switching)
-//20-22 Jun: Added slices (turns on inner layers)
+//20-21 Jun: Added slices (turns on inner layers)
+//22 Jun: Fixed the reset button, removed old code (matrix transformation-based rotations)
