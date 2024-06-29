@@ -6,7 +6,7 @@ enum Moves{
   F, 
   B;
   
-  static String getOppositeFace(String face){
+  public static String getOppositeFace(String face){
     switch(face.charAt(0)){
       case 'F':
         return "B";

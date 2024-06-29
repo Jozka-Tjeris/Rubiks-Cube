@@ -4,22 +4,22 @@ class PieceGroup implements Cloneable{
   String[] facesToShow;
   PVector position = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
   
-  PieceGroup(PieceType type, String[] faces){
+  public PieceGroup(PieceType type, String[] faces){
     groupType = type;
     facesToShow = faces;
   }
   
-  void addBlockIdx(int b){
+  public void addBlockIdx(int b){
     indexList.add(b);
   }
     
-  String getFacesAsString(){
+  public String getFacesAsString(){
     String s = "";
     for(String c: facesToShow) s += c;
     return s;
   }
   
-  PVector setPosition(Cube c){
+  public PVector setPosition(Cube c){
     PVector sumPos = new PVector(0, 0, 0);
     for(int idx: indexList) sumPos.add(c.blocks[idx].distToCenter.copy());
     
@@ -28,7 +28,7 @@ class PieceGroup implements Cloneable{
     return position;
   }
   
-  PVector getClosestToCenter(Cube c){
+  public PVector getClosestToCenter(Cube c){
     PVector resPos = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
     for(int idx: indexList){
       if(get2DLength(resPos) > get2DLength(c.blocks[idx].distToCenter.copy())){
@@ -38,7 +38,7 @@ class PieceGroup implements Cloneable{
     return resPos;
   }
   
-  PVector getSumOfPositions(Cube c){
+  public PVector getSumOfPositions(Cube c){
     PVector resPos = new PVector(0, 0, 0);
     for(int idx: indexList){
       resPos.add(c.blocks[idx].distToCenter.copy());
@@ -47,13 +47,13 @@ class PieceGroup implements Cloneable{
     return resPos;
   }
   
-  void flipAll(Cube c, boolean state){
+  public void flipAll(Cube c, boolean state){
     for(int idx: indexList){
       c.blocks[idx].flipped = state;
     }
   }
   
-  void drawBlocks(Cube c){    
+  public void drawBlocks(Cube c){    
     ArrayList<String[]> faces = new ArrayList<String[]>();
     ArrayList<Integer> indexes = new ArrayList<Integer>();
     
@@ -67,13 +67,13 @@ class PieceGroup implements Cloneable{
         String f = faces.get(j)[i];
         if(c.blocks[indexes.get(j)].toggleFacesToShow(f, 1)){
           c.blocks[indexes.get(j)].showFace(Moves.valueOf(f));
-          //c.blocks[indexes.get(j)].showColor(Moves.valueOf(f));
+          c.blocks[indexes.get(j)].showColor(Moves.valueOf(f));
         }
       }
     }
   }
   
-  void filterNonMovingBlocks(Cube c, char state, Turn turn){
+  public void filterNonMovingBlocks(Cube c, char state, Turn turn){
     ArrayList<Integer> movingIndexList = new ArrayList<Integer>();
     for(int i: indexList) if(c.blocks[i].isMoving == true) movingIndexList.add(i);
     if(movingIndexList.size() == 0) return;

@@ -25,6 +25,7 @@ class Block{
   ArrayList<String> neighbors = new ArrayList<String>();
   ArrayList<String> facesToShow = new ArrayList<String>();
   boolean isMoving = false;
+  boolean flipped = false;
       
   Block(PVector v, float l, PVector distanceToCenter){
     setDistanceFactorFromCenter(distanceToCenter);
@@ -59,21 +60,19 @@ class Block{
     projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
-  void removeNeighbor(String direction){
+  public void removeNeighbor(String direction){
     if(!Moves.getAllFaces().contains(direction)) return;
     neighbors.remove(direction);
     facesToShow.add(direction);
   }
   
-  void setDistanceFactorFromCenter(PVector v){
+  public void setDistanceFactorFromCenter(PVector v){
     distToCenter = v.copy();
   }
   
-  boolean flipped = false;
-  
-  void showFace(Moves move){
+  public void showFace(Moves move){
     strokeWeight(1);
-    //stroke(50);
+    stroke(50);
     fill(30);
     if(!flipped) noFill();
     if(sideColors[5] >= 0 && move == Moves.B){
@@ -120,7 +119,7 @@ class Block{
     }
   }
   
-  void showColor(Moves move){
+  public void showColor(Moves move){
     noStroke();
     if(sideColors[5] >= 1 && move == Moves.B){
       //3.0.6.9, Z- Face (B)
@@ -172,11 +171,11 @@ class Block{
     }
   }
   
-  void resetFacesToShow(){
+  public void resetFacesToShow(){
     for(int i = 0; i < sideColors.length; i++) sideColors[i] = -1;
   }
   
-  boolean toggleFacesToShow(String faceToChange, int status){
+  public boolean toggleFacesToShow(String faceToChange, int status){
     if(status < -1 || status > 1) return false;
     
     for(Moves s: Moves.values()){
@@ -190,7 +189,7 @@ class Block{
     return false;
   }
   
-  String[] findFacesToShow(){
+  public String[] findFacesToShow(){
     HashMap<Moves, Float>zValues = new HashMap<Moves, Float>();
     for(String s: facesToShow) zValues.put(Moves.valueOf(s), getZDepth(s));
     
@@ -212,7 +211,7 @@ class Block{
     return resultFaces;
   }
   
-  float getZDepth(String faceToFind){
+  public float getZDepth(String faceToFind){
     switch(faceToFind.charAt(0)){
       case 'U':
         return perspectivePoints[0].z + perspectivePoints[1].z + 
@@ -236,7 +235,7 @@ class Block{
     return 0;
   }
   
-  void transform(char direction, int amount){
+  public void transform(char direction, int amount){
     if(direction == 'x') rotation.x = (rotation.x + amount) % 360;
     if(direction == 'y') rotation.y = (rotation.y + amount) % 360;
     if(direction == 'z') rotation.z = (rotation.z + amount) % 360;
@@ -246,7 +245,7 @@ class Block{
     while(rotation.z < 0) rotation.z += 360;
   }
   
-  void updateQXYZ(char direction, int amt){
+  public void updateQXYZ(char direction, int amt){
     distToCenter = rotateAroundAxis(amt, direction, distToCenter);
     for(int i = 0; i < pointDisps.length; i++) pointDisps[i] = rotateAroundAxis(amt, direction, pointDisps[i]);
     for(int i = 0; i < interiorPoints.length; i++) interiorPoints[i] = rotateAroundAxis(amt, direction, interiorPoints[i]);
@@ -255,7 +254,7 @@ class Block{
     projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
-  void updateQAroundAxis(PVector axis, int amt){
+  public void updateQAroundAxis(PVector axis, int amt){
     distToCenter = rotateAroundCustomAxis(amt, axis, distToCenter);
     for(int i = 0; i < pointDisps.length; i++) pointDisps[i] = rotateAroundCustomAxis(amt, axis, pointDisps[i]);
     for(int i = 0; i < interiorPoints.length; i++) interiorPoints[i] = rotateAroundCustomAxis(amt, axis, interiorPoints[i]);
@@ -264,7 +263,7 @@ class Block{
     projectedInteriorPoints = applyPerspectiveProjection(interiorPoints, distToCenter);
   }
   
-  PVector getCenter(){
+  public PVector getCenter(){
     return currCenter.copy();
   }
 }

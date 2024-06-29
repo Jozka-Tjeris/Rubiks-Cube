@@ -108,20 +108,6 @@ boolean isVectorFurther(PVector p1, PVector p2, float marginOfError){
   return false;
 }
 
-boolean isVectorFurtherWithDifferentVectors(PVector p1, PVector p2, PVector p3, PVector p4, float marginOfError){
-  if(abs(p1.z - p2.z) < marginOfError){
-    if(get2DLength(p3) > get2DLength(p4)){
-      return true;
-    }else{
-      return false;
-    }
-  }
-  else if(p1.z < p2.z){
-    return true;
-  }
-  return false;
-}
-
 void swapBlocks(Block[] arr, int a, int b){
   if(a < 0 || b < 0 || a >= arr.length || b >= arr.length){
     return;

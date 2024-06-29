@@ -4,7 +4,7 @@ enum PieceType{
   Center,
   Internal;
   
-  static PieceType getType(String facesToShow){
+  public static PieceType getType(String facesToShow){
     switch(facesToShow.length()){
       case 3:
         return Corner;

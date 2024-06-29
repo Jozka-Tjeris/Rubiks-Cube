@@ -184,9 +184,7 @@ class Turn{
       currIndexes.add((cubeSize/2)*cr + (cubeSize/2 - 1)*ci);
       currIndexes.add((cubeSize/2)*cr + (cubeSize/2)*ci);
     }
-    
-    println(currIndexes);
-    
+        
     int currGroup = (dInv) ? ((d > 0) ? 2 : 1) : 0;
     boolean prevState = false;
     

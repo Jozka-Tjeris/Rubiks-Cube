@@ -7,7 +7,7 @@ class Axis{
   float axisLength = 0;
   PVector rotation = new PVector(0, 0, 0);
   
-  Axis(PVector v, float l){
+  public Axis(PVector v, float l){
     center = v.copy();
     axisLength = l;
     
@@ -28,7 +28,7 @@ class Axis{
     originalPoints = points.clone();
   }
   
-  void show(){
+  public void show(){
     stroke(170);
     strokeWeight(16);    
     for(int i = 0; i < 3; i++){
@@ -49,13 +49,13 @@ class Axis{
     }
   }
   
-  void reset(){
+  public void reset(){
     rotation = new PVector(0, 0, 0);
     pointDisps = originalPointDisps.clone();
     points = originalPoints.clone();
   }
   
-  void transform(char direction, float amount){
+  public void transform(char direction, float amount){
     if(direction == 'x') rotation.x += amount;
     if(direction == 'y') rotation.y += amount;
     if(direction == 'z') rotation.z += amount;
@@ -65,11 +65,11 @@ class Axis{
     while(rotation.z < 0) rotation.z += 360;
   }
   
-  void setRotation(PVector n){
+  public void setRotation(PVector n){
     rotation = n;
   }
   
-  void update(){
+  public void update(){
     PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
     
     for(int i = 0; i < pointDisps.length; i++){
@@ -77,21 +77,21 @@ class Axis{
     }
   }
   
-  void updateQXYZ(char direction, int amount){
+  public void updateQXYZ(char direction, int amount){
     for(int i = 0; i < pointDisps.length; i++){
       pointDisps[i] = rotateAroundAxis(amount, direction, pointDisps[i]);
       points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
     }
   }
   
-  void updateQAroundAxis(PVector axisOfRotation, int amount){
+  public void updateQAroundAxis(PVector axisOfRotation, int amount){
     for(int i = 0; i < pointDisps.length; i++){
       pointDisps[i] = rotateAroundCustomAxis(amount, axisOfRotation, pointDisps[i]);
       points[i] = center.copy().add(pointDisps[i].copy().mult(axisLength/2));
     }
   }
   
-  PVector getAxisOfRotation(char direction, boolean flipped){
+  public PVector getAxisOfRotation(char direction, boolean flipped){
     switch(direction){
       case 'x':
         PVector xAxis = points[1].copy().sub(points[0].copy()).normalize();

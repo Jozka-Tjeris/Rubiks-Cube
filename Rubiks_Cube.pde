@@ -13,7 +13,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 4;
+int size = 5;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -67,16 +67,7 @@ void draw(){
     point(mouseX, mouseY);
   }
   findAxis(mouseHeldDown);
-
-  stroke(255, 255, 0);
-  strokeWeight(12);
-  //point(cube.displayOrder.get(idx).position.x * blockLengths[size - 1] + 400, 
-        //cube.displayOrder.get(idx).position.y * blockLengths[size - 1] + 400);
-  
   cube.blockGroups.get(cube.displayOrder.get(idx)).flipAll(cube, true);
-  
-  point(cube.blocks[cube.blockGroups.get(cube.displayOrder.get(idx)).indexList.get(0)].perspectivePoints[0].x, 
-        cube.blocks[cube.blockGroups.get(cube.displayOrder.get(idx)).indexList.get(0)].perspectivePoints[0].y);
 }
 
 void keyPressed(){
@@ -121,7 +112,7 @@ void keyPressed(){
   
   if(key == 'e'){
     idx = 0;
-    cube.generateDisplayOrder();
+    cube.generateDisplayOrder(cube.blockGroups);
   }
 }
 
