@@ -13,7 +13,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 3;
+int size = 4;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -73,9 +73,10 @@ void draw(){
   //point(cube.displayOrder.get(idx).position.x * blockLengths[size - 1] + 400, 
         //cube.displayOrder.get(idx).position.y * blockLengths[size - 1] + 400);
   
-  cube.displayOrder.get(idx).flipAll(cube, true);
+  cube.blockGroups.get(cube.displayOrder.get(idx)).flipAll(cube, true);
   
-  point(cube.blocks[0].perspectivePoints[0].x, cube.blocks[0].perspectivePoints[0].y);
+  point(cube.blocks[cube.blockGroups.get(cube.displayOrder.get(idx)).indexList.get(0)].perspectivePoints[0].x, 
+        cube.blocks[cube.blockGroups.get(cube.displayOrder.get(idx)).indexList.get(0)].perspectivePoints[0].y);
 }
 
 void keyPressed(){
@@ -116,7 +117,6 @@ void keyPressed(){
   
   if(key == 'q'){
     idx = (idx + 1) % cube.displayOrder.size();
-    println(cube.displayOrder.get(idx).position);
   }
   
   if(key == 'e'){
@@ -218,3 +218,5 @@ void findAxis(boolean hasNewPos){
 //19 Jun: Refactored some code (reference switching)
 //20-21 Jun: Added slices (turns on inner layers)
 //22 Jun: Fixed the reset button, removed old code (matrix transformation-based rotations)
+//26-27 Jun: Improved the rendering process when doing slice turns
+//28-29 Jun: Tweaked the rendering process to reduce computations and increase reliability

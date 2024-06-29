@@ -1,15 +1,19 @@
 import java.util.LinkedList;
+import java.util.Collections;
 
 class Cube{
   int cubeSize;
   Block[] blocks;
   Axis axis;
   HashMap<String, PieceGroup> blockGroups = new HashMap<String, PieceGroup>();
-  ArrayList<PieceGroup> displayOrder = new ArrayList<PieceGroup>();
+  ArrayList<String> displayOrder = new ArrayList<String>();
+  ArrayList<HashMap<String, PieceGroup>> groupStages = new ArrayList<HashMap<String, PieceGroup>>();
   LinkedList<Moves> moveQueue = new LinkedList<Moves>();
   int moveAnimationCounter = 0;
   String currMove = " ";
   PVector[] originalBlockDisps;
+  boolean readyToTurn = false;
+  Turn currentTurn;
   
   Cube(int size, int blockLength){
     cubeSize = size;
@@ -62,8 +66,31 @@ class Cube{
   }
   
   void show(){
-    for(PieceGroup g: displayOrder){ 
-      g.drawBlocks(this);
+    if(!readyToTurn){
+      for(String g: displayOrder){ 
+        blockGroups.get(g).drawBlocks(this);
+      }
+    }
+    else{
+      println(getDisplayOrderGroups());
+      for(int idx: getDisplayOrderGroups()){
+        switch(idx){
+            case 0:
+              stroke(255, 0, 0);
+              break;
+            case 1:
+              stroke(0, 255, 0);
+              break;
+            case 2:
+              stroke(0, 0, 255);
+              break;
+        }
+        for(String g: displayOrder){
+          if(groupStages.get(idx).containsKey(g)){
+            groupStages.get(idx).get(g).drawBlocks(this);
+          }
+        }
+      }
     }
     axis.show();
   }
@@ -83,10 +110,13 @@ class Cube{
     if(Moves.getAllFaces().contains(currMove)){
       if(moveAnimationCounter < 90){
         moveAnimationCounter++;
-        turnFace(Moves.valueOf(currMove), 1);
+        if(!readyToTurn){
+          setUpBlocksToTurn(Moves.valueOf(currMove), 1);
+        }
+        turnFace(Moves.valueOf(currMove));
       }else{
         moveAnimationCounter = 0;
-        shuffleBlocks(Moves.valueOf(currMove), 1);
+        shuffleBlocks();
         currMove = " ";
       }
     }
@@ -152,18 +182,29 @@ class Cube{
     blocks[index].isMoving = state;
   }
   
-  void turnFace(Moves faceToTurn, int layer){
+  void setUpBlocksToTurn(Moves faceToTurn, int layer){
     if(layer < 0) layer = 0;
     if(layer >= cubeSize) layer = cubeSize - 1;
-
-    Turn turn = new Turn(cubeSize, layer, faceToTurn);
-    turn.setAxis(faceToTurn, axis);
+    currentTurn = new Turn(cubeSize, layer, faceToTurn);
+    
+    for(int r = 0; r < cubeSize; r++){
+      for(int i = 0; i < cubeSize; i++){
+        int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
+        toggleMovingBlock(index, true);
+      }
+    }
+    generateGroups(faceToTurn, layer);
+    readyToTurn = true;
+  }
+  
+  void turnFace(Moves faceToTurn){
+    if(!readyToTurn) return;
+    currentTurn.setAxis(faceToTurn, axis);
   
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
-        int index = turn.d*turn.cd + r*turn.cr + i*turn.ci;
-        toggleMovingBlock(index, true);
-        blocks[index].updateQAroundAxis(turn.axisOfRotation, 1);
+        int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
+        blocks[index].updateQAroundAxis(currentTurn.axisOfRotation, 1);
         //blocks[index].toggleFacesToShow(turn.oppFace, 0);
         //blocks[index].showFace(Moves.valueOf(turn.oppFace));
         //blocks[index + turn.diff].toggleFacesToShow(turn.faceToTurn, 0);
@@ -172,94 +213,14 @@ class Cube{
     }
   }
   
-  /*
-  Faces to target: (d is depth layer), Start by directly facing the center of the face to rotate
-  Note: d can be anywhere from 0 to n - 1,
-  Note: i and r starts at 0 (i0 and r0), goes to n - 1 (i1 and r1)
-  Note: var' = n - var - 1
-  
-  B: (Blue)
-  [d*n*n + r0*n + i0', d*n*n + r0*n + i1']
-  ...
-  [d*n*n + r1*n + i0', d*n*n + r1*n + i1']
-  
-  Ex: (d = 0)
-  [04, 03, 02, 01, 00]
-  [09, 08, 07, 06, 05]
-  [14, 13, 12, 11, 10]
-  [19, 18, 17, 16, 15]
-  [24, 23, 22, 21, 20]
-  
-  F: (Green)
-  [d'*n*n + r0*n + i0, d'*n*n + r0*n + i1]
-  ...
-  [d'*n*n + r1*n + i0, d'*n*n + r1*n + i1]
-  
-  Ex: (d = 0)
-  [100, 101, 102, 103, 104]
-  [105, 106, 107, 108, 109]
-  [110, 111, 112, 113, 114]
-  [115, 116, 117, 118, 119]
-  [120, 121, 122, 123, 124]
-  
-  R: (Red)
-  [d' + r0*n + i0'*n*n, d' + r0*n + i1'*n*n]
-  ...
-  [d' + r1*n + i1'*n*n, d' + r1*n + i1'*n*n]
-  
-  Ex: (d = 0)
-  [104, 79, 54, 29, 04]
-  [109, 84, 59, 34, 09]
-  [114, 89, 64, 39, 14]
-  [119, 94, 69, 44, 19]
-  [124, 99, 74, 49, 24]
-  
-  L: (Orange)
-  [d + r0*n + i0*n*n, d + r0*n + i1*n*n]
-  ...
-  [d + r1*n + i0*n*n, d + r1*n + i1*n*n]
-  
-  Ex: (d = 0)
-  [00, 25, 50, 75, 100]
-  [05, 30, 55, 80, 105]
-  [10, 35, 60, 85, 110]
-  [15, 40, 65, 90, 115]
-  [20, 45, 70, 95, 120]
-  
-  U: (White)
-  [d*n + r0*n*n + i0, d + r0*n*n + i1]
-  ...
-  [d*n + r1*n*n + i0, d + r1*n*n + i1]
-  
-  Ex: (d = 0)
-  [000, 001, 002, 003, 004]
-  [025, 026, 027, 028, 029]
-  [050, 051, 052, 053, 054]
-  [075, 076, 077, 078, 079]
-  [100, 101, 102, 103, 104]
-  
-  D: (Yellow)
-  [d'*n + r0'*n*n + i0, d'*n + r0'*n*n + i1]
-  ...
-  [d'*n + r1'*n*n + i0, d'*n + r1'*n*n + i1]
-  
-  Ex: (d = 0)
-  [120, 121 ,122, 123, 124]
-  [095, 096, 097, 098, 099]
-  [070, 071, 072, 073, 074]
-  [045, 046, 047, 048, 049]
-  [020, 021, 022, 023, 024]
-  */
-  
-  void shuffleBlocks(Moves face, int layer){
+  void shuffleBlocks(){
     int[][] initPosArr = new int[cubeSize][cubeSize];
-    Turn turn = new Turn(cubeSize, layer, face);
     
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
-        int dIdx = turn.d * turn.cd;
-        int rIdx = turn.rInv ? (cubeSize - r - 1)* turn.cr : r* turn.cr;
-        int iIdx = turn.iInv ? (cubeSize - i - 1)* turn.ci : i* turn.ci;
+        int dIdx = currentTurn.d * currentTurn.cd;
+        int rIdx = currentTurn.rInv ? (cubeSize - r - 1)* currentTurn.cr : r* currentTurn.cr;
+        int iIdx = currentTurn.iInv ? (cubeSize - i - 1)* currentTurn.ci : i* currentTurn.ci;
         
         initPosArr[r][i] = dIdx + rIdx + iIdx;
       }
@@ -294,6 +255,9 @@ class Cube{
         blocks[initPosArr[i][j]] = blockArr[i][j];
       }
     }
+    
+    currentTurn = null;
+    readyToTurn = false;
   }
   
   void addMove(Moves m){
@@ -308,24 +272,178 @@ class Cube{
       g.setPosition(this);
       blockGroupsCopy.put(g.getFacesAsString(), g);
     }
-    ArrayList<PieceGroup> res = new ArrayList<PieceGroup>();
+    ArrayList<String> res = new ArrayList<String>();
     
     while(blockGroupsCopy.size() > 0){
       PieceGroup currGroup = new PieceGroup(PieceType.Internal, null);
       for(String s: blockGroupsCopy.keySet()){
-        if(abs(blockGroupsCopy.get(s).position.z - currGroup.position.z) < marginOfErrors[cubeSize - 1]){
-          if(get2DLength(blockGroupsCopy.get(s).position) > get2DLength(currGroup.position)){
-            currGroup = blockGroupsCopy.get(s);
-          }
-        }
-        else if(blockGroupsCopy.get(s).position.z < currGroup.position.z){
+        if(isVectorFurther(blockGroupsCopy.get(s).position, currGroup.position, marginOfErrors[cubeSize - 1])){
           currGroup = blockGroupsCopy.get(s);
         }
       }
-      res.add(currGroup);
+      res.add(currGroup.getFacesAsString());
       blockGroupsCopy.remove(currGroup.getFacesAsString());
     }
     
     displayOrder = res;
+  }
+  
+  ArrayList<Integer> getDisplayOrderGroups(){
+    ArrayList<Integer> groupOrder = new ArrayList<Integer>();
+    //HashMap<Integer, PVector> groupListDepth = new HashMap<Integer, PVector>();
+    //HashMap<Integer, PVector> groupListDistance = new HashMap<Integer, PVector>();
+    ArrayList<ArrayList<Integer>> groupsToCompare = currentTurn.generateGroupList(this);
+    HashMap<Integer, PVector> groupLists = new HashMap<Integer, PVector>();
+    
+    //for(int i = 0; i < groupDepthsToCompare.size(); i++){
+    //  PVector sumPV = new PVector(0, 0, 0);
+    //  for(PieceGroup group: groupDepthsToCompare.get(i)){
+    //    //println(group.groupType.name() + group.getFacesAsString() + group.indexList);
+    //    PVector temp = group.getSumOfPositions(this);
+    //    sumPV.add(temp);
+    //    //println(i + "A" + temp);
+    //  }
+    //  groupListDepth.put(i, sumPV);
+    //}
+    
+    for(int i = 0; i < groupsToCompare.size(); i++){
+      PVector sumPV = new PVector(0, 0, 0);
+      for(int p: groupsToCompare.get(i)){
+        //println(group.groupType.name() + group.getFacesAsString() + group.indexList);
+        sumPV.add(blocks[p].distToCenter.copy());
+        //println(i + "A" + temp);
+      }
+      sumPV.div(groupsToCompare.get(i).size());
+      groupLists.put(i, sumPV);
+    }
+    
+    while(groupLists.size() > 0){
+      PVector currFurthestPoint = new PVector(0, 0, Integer.MAX_VALUE);
+      int index = 0;
+      for(int i: groupLists.keySet()){
+        PVector currP = groupLists.get(i);
+        if(isVectorFurther(currP, currFurthestPoint, marginOfErrors[cubeSize - 1])){
+          currFurthestPoint = currP;
+          index = i;
+        }
+      }
+      groupOrder.add(index);
+      groupLists.remove(index);
+    }
+    
+    //groupListDistance.put(0, groupDistancesToCompare.get(0));
+    //groupListDistance.put(1, groupDistancesToCompare.get(1));
+    //if(groupDepthsToCompare.size() > 2){
+    //  groupListDistance.put(2, groupDistancesToCompare.get(2));
+    //}
+    //for(int i: groupListDepth.keySet()){
+    //  PVector p2 = groupListDepth.get(i);
+    //  println(i + " " + p2);
+    //}
+    //println(groupListDepth + "\n" + groupListDistance);
+    //while(groupListDepth.size() > 0){
+    //  PVector closestDepthP = new PVector(0, 0, Integer.MAX_VALUE);
+    //  PVector furthestDistanceP = new PVector(0, 0, 0);
+    //  int index = 0;
+    //  for(int i: groupListDepth.keySet()){
+    //    PVector currDepthP = groupListDepth.get(i);
+    //    PVector currDistanceP = groupListDistance.get(i);
+    //    if(isVectorFurtherWithDifferentVectors(currDepthP, closestDepthP, 
+    //                                           currDistanceP, furthestDistanceP, 
+    //                                           marginOfErrors[cubeSize - 1])){
+    //      closestDepthP = currDepthP;
+    //      furthestDistanceP = currDistanceP;
+    //      index = i;
+    //    }
+    //  }
+    //  groupOrder.add(index);
+    //  groupListDepth.remove(index);
+    //  groupListDistance.remove(index);
+      //println(groupListDepth);
+    //}
+    
+    
+    return groupOrder;
+  }
+  
+  void generateGroups(Moves face, int layer){
+    /*
+    Group 0: Groups that match the face
+    Group 1: Groups that don't match the face(s)
+    Group 2: Groups that match the opposite face (slice turns only)
+    */
+    
+    //groupDepthsToCompare.clear();
+    groupStages.clear();
+
+    //groupDistancesToCompare.addAll(Arrays.asList(new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, 0),
+    //                                             new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, 0)));
+    //if(layer > 0) groupDistancesToCompare.add(new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, 0));
+    
+    //groupDepthsToCompare.addAll(Arrays.asList(new ArrayList<PieceGroup>(), 
+    //                                          new ArrayList<PieceGroup>()));
+    //if(layer > 0) groupDepthsToCompare.add(new ArrayList<PieceGroup>());
+    
+    HashMap<String, PieceGroup> groupMatchesFace = new HashMap<String, PieceGroup>();
+    HashMap<String, PieceGroup> groupDoesntMatchBothFaces = new HashMap<String, PieceGroup>();
+    HashMap<String, PieceGroup> groupMatchesOppositeFace = new HashMap<String, PieceGroup>();
+    
+    for(String s: blockGroups.keySet()){
+      PieceGroup currGroup = (PieceGroup) blockGroups.get(s).clone();
+      if(s.contains(face.name())){ //matches face
+        groupMatchesFace.put(s, currGroup);
+        //groupDepthsToCompare.get(0).add(currGroup);
+      }
+      else if(layer > 0 && s.contains(Moves.getOppositeFace(face.name()))){ //matches opposite face
+        groupMatchesOppositeFace.put(s, currGroup);
+        //groupDepthsToCompare.get(2).add(currGroup);
+      }
+      else{ //doesn't match either face
+        //println(blockGroups.get(s).indexList);
+        groupMatchesFace.put(s, (PieceGroup) currGroup.clone());
+        groupMatchesFace.get(s).filterNonMovingBlocks(this, '<', currentTurn);
+        //groupDepthsToCompare.get(0).add(groupMatchesFace.get(s));
+        //println("M" + groupMatchesFace.get(s).indexList);
+        if(groupMatchesFace.get(s).indexList.size() == 0){
+          groupMatchesFace.remove(s);
+        }else{
+          //PVector vectorToConsider = groupMatchesFace.get(s).getClosestToCenter(this);
+          //if(get2DLength(vectorToConsider) < get2DLength(groupDistancesToCompare.get(0))){
+          //  groupDistancesToCompare.set(0, vectorToConsider);
+          //}
+        }
+        
+        groupDoesntMatchBothFaces.put(s, (PieceGroup) currGroup.clone());
+        groupDoesntMatchBothFaces.get(s).filterNonMovingBlocks(this, '=', currentTurn);
+        //groupDepthsToCompare.get(1).add(groupDoesntMatchBothFaces.get(s));
+        //println("D" + groupDoesntMatchBothFaces.get(s).indexList);
+        if(groupDoesntMatchBothFaces.get(s).indexList.size() == 0){
+          groupDoesntMatchBothFaces.remove(s);
+        }else{
+          //PVector vectorToConsider = groupDoesntMatchBothFaces.get(s).getClosestToCenter(this);
+          //if(get2DLength(vectorToConsider) < get2DLength(groupDistancesToCompare.get(1))){
+          //  groupDistancesToCompare.set(1, vectorToConsider);
+          //}
+        }
+
+        if(layer > 0){
+          groupMatchesOppositeFace.put(s, (PieceGroup) currGroup.clone());
+          groupMatchesOppositeFace.get(s).filterNonMovingBlocks(this, '>', currentTurn);
+          //groupDepthsToCompare.get(2).add(groupMatchesOppositeFace.get(s));
+          //println("O" + groupMatchesOppositeFace.get(s).indexList);
+          if(groupMatchesOppositeFace.get(s).indexList.size() == 0){
+            groupMatchesOppositeFace.remove(s);
+          }else{
+            //PVector vectorToConsider = groupMatchesOppositeFace.get(s).getClosestToCenter(this);
+            //if(get2DLength(vectorToConsider) < get2DLength(groupDistancesToCompare.get(2))){
+            //  groupDistancesToCompare.set(2, vectorToConsider);
+            //}
+          }
+        }
+      }
+    }
+    
+    groupStages.addAll(Arrays.asList(groupMatchesFace, groupDoesntMatchBothFaces));
+    if(layer > 0) groupStages.add(groupMatchesOppositeFace);
   }
 }

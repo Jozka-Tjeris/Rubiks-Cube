@@ -73,7 +73,7 @@ class Block{
   
   void showFace(Moves move){
     strokeWeight(1);
-    stroke(50);
+    //stroke(50);
     fill(30);
     if(!flipped) noFill();
     if(sideColors[5] >= 0 && move == Moves.B){
