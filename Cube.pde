@@ -11,9 +11,11 @@ class Cube{
   LinkedList<Moves> moveQueue = new LinkedList<Moves>();
   int moveAnimationCounter = 0;
   String currMove = " ";
+  int currDepth = 0;
   PVector[] originalBlockDisps;
   boolean readyToTurn = false;
   Turn currentTurn;
+  boolean isTurnClockwise = true;
   
   public Cube(int size, int blockLength){
     cubeSize = size;
@@ -111,7 +113,7 @@ class Cube{
       if(moveAnimationCounter < 90){
         moveAnimationCounter++;
         if(!readyToTurn){
-          setUpBlocksToTurn(Moves.valueOf(currMove), 1);
+          setUpBlocksToTurn(Moves.valueOf(currMove), currDepth);
         }
         turnFace(Moves.valueOf(currMove));
       }else{
@@ -129,6 +131,15 @@ class Cube{
     }
     axis.updateQXYZ(direction, amount);
     generateDisplayOrder(blockGroups);
+  }
+  
+  public void setDepth(int depth){
+    if(depth < 1 || depth > (cubeSize / 2) + (cubeSize % 2)) return;
+    currDepth = depth - 1;
+  }
+  
+  public void setDirection(boolean state){
+    isTurnClockwise = state;
   }
     
   public void reset(){    
@@ -185,8 +196,8 @@ class Cube{
   private void setUpBlocksToTurn(Moves faceToTurn, int layer){
     if(layer < 0) layer = 0;
     if(layer >= cubeSize) layer = cubeSize - 1;
-    currentTurn = new Turn(cubeSize, layer, faceToTurn);
-    
+    currentTurn = new Turn(cubeSize, layer, faceToTurn, isTurnClockwise);
+
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
         int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
@@ -204,7 +215,7 @@ class Cube{
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
         int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
-        blocks[index].updateQAroundAxis(currentTurn.axisOfRotation, 1);
+        blocks[index].updateQAroundAxis(currentTurn.axisOfRotation, currentTurn.directionAmount);
         //blocks[index].toggleFacesToShow(turn.oppFace, 0);
         //blocks[index].showFace(Moves.valueOf(turn.oppFace));
         //blocks[index + turn.diff].toggleFacesToShow(turn.faceToTurn, 0);
@@ -294,14 +305,26 @@ class Cube{
     HashMap<Integer, PVector> groupLists = new HashMap<Integer, PVector>();
     
     for(int i = 0; i < groupsToCompare.size(); i++){
-      PVector sumPV = new PVector(0, 0, 0);
-      for(int p: groupsToCompare.get(i)){
-        sumPV.add(blocks[p].distToCenter.copy());
+      PVector closestP = new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE);
+      
+      for(int p = 0; p < groupsToCompare.get(i).size(); p += cubeSize % 2){
+        if(cubeSize % 2 == 0){
+          PVector currP = new PVector(0, 0, 0);
+          for(int j = 0; j < 4; j++, p++){
+            currP.add(blocks[groupsToCompare.get(i).get(p)].distToCenter.copy());
+          }
+          if(isVectorFurther(closestP, currP, marginOfErrors[cubeSize - 1])){
+            closestP = currP;
+          }
+        }else{
+          if(isVectorFurther(closestP, blocks[p].distToCenter.copy(), marginOfErrors[cubeSize - 1])){
+            closestP = blocks[p].distToCenter.copy();
+          }
+        }
       }
-      sumPV.div(groupsToCompare.get(i).size());
-      groupLists.put(i, sumPV);
+      groupLists.put(i, closestP);
     }
-    
+        
     while(groupLists.size() > 0){
       PVector currFurthestPoint = new PVector(0, 0, Integer.MAX_VALUE);
       int index = 0;
@@ -336,15 +359,17 @@ class Cube{
       if(s.contains(face.name())){ //matches face
         groupMatchesFace.put(s, currGroup);
       }
-      else if(layer > 0 && s.contains(Moves.getOppositeFace(face.name()))){ //matches opposite face
+      else if(!isLayerOnEdge(layer, cubeSize) && s.contains(Moves.getOppositeFace(face.name()))){ //matches opposite face
         groupMatchesOppositeFace.put(s, currGroup);
       }
       else{ //doesn't match either face
-        groupMatchesFace.put(s, (PieceGroup) currGroup.clone());
-        groupMatchesFace.get(s).filterNonMovingBlocks(this, '<', currentTurn);
-        //println("M" + groupMatchesFace.get(s).indexList);
-        if(groupMatchesFace.get(s).indexList.size() == 0){
-          groupMatchesFace.remove(s);
+        if(layer > 0 && layer < cubeSize - 1){
+          groupMatchesFace.put(s, (PieceGroup) currGroup.clone());
+          groupMatchesFace.get(s).filterNonMovingBlocks(this, '<', currentTurn);
+          //println("M" + groupMatchesFace.get(s).indexList);
+          if(groupMatchesFace.get(s).indexList.size() == 0){
+            groupMatchesFace.remove(s);
+          }
         }
         
         groupDoesntMatchBothFaces.put(s, (PieceGroup) currGroup.clone());
@@ -354,7 +379,7 @@ class Cube{
           groupDoesntMatchBothFaces.remove(s);
         }
 
-        if(layer > 0){
+        if(!isLayerOnEdge(layer, cubeSize)){
           groupMatchesOppositeFace.put(s, (PieceGroup) currGroup.clone());
           groupMatchesOppositeFace.get(s).filterNonMovingBlocks(this, '>', currentTurn);
           //println("O" + groupMatchesOppositeFace.get(s).indexList);

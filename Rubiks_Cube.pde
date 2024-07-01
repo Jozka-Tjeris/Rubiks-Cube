@@ -13,7 +13,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 5;
+int size = 6;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -71,7 +71,10 @@ void draw(){
 }
 
 void keyPressed(){
-  if(key == 'i') reversed = !reversed;
+  if(key == 'i'){
+    reversed = !reversed;
+    cube.setDirection(!cube.isTurnClockwise);
+  }
   
   if(key == ' '){
     spacebarPressed = !spacebarPressed;
@@ -114,6 +117,8 @@ void keyPressed(){
     idx = 0;
     cube.generateDisplayOrder(cube.blockGroups);
   }
+  
+  if('1' <= key && key <= '9') cube.setDepth(key - '0');
 }
 
 void keyReleased(){
@@ -211,3 +216,4 @@ void findAxis(boolean hasNewPos){
 //22 Jun: Fixed the reset button, removed old code (matrix transformation-based rotations)
 //26-27 Jun: Improved the rendering process when doing slice turns
 //28-29 Jun: Tweaked the rendering process to reduce computations and increase reliability
+//1-2 Jul: Fixed the rendering process to handle surface and slice turns, added option to change depth and direction of turns

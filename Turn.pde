@@ -11,6 +11,7 @@ class Turn{
   boolean iInv = false;
   boolean rInv = false;
   boolean dInv = false;
+  int directionAmount = 0;
   
   /*
   Faces to target: (d is depth layer), Start by directly facing the center of the face to rotate
@@ -91,8 +92,9 @@ class Turn{
   [020, 021, 022, 023, 024]
   */
   
-  public Turn(int size, int layer, Moves move){
+  public Turn(int size, int layer, Moves move, boolean isTurnClockwise){
     cubeSize = size;
+    directionAmount = isTurnClockwise ? 1 : -1;
     switch(move.name().charAt(0)){
       case 'B':
         cd = size*size;
@@ -170,10 +172,26 @@ class Turn{
     }
   }
   
+  /* (g is based off of layer 0)
+  L: d = 0; g = 1
+  d = n - 1; g = 0
+  else: g = 0
+  
+  R: d = n - 1; g = 0
+  d = 0; g = 1
+  else: g = 2
+  
+  U: d = 0; g = 1
+  d = n - 1: g = 0
+  else: g = 0
+  
+  D: d = n - 1; g = 0
+  */
+  
   public ArrayList<ArrayList<Integer>> generateGroupList(Cube c){
     ArrayList<ArrayList<Integer>> groups = new ArrayList<ArrayList<Integer>>();
     groups.addAll(Arrays.asList(new ArrayList<Integer>(), new ArrayList<Integer>()));
-    if(d > 0) groups.add(new ArrayList<Integer>());
+    if(!isLayerOnEdge(d, cubeSize)) groups.add(new ArrayList<Integer>());
     ArrayList<Integer> currIndexes = new ArrayList<Integer>();
     //adds the center(s) of the cube
     if(cubeSize % 2 == 1){
@@ -184,21 +202,21 @@ class Turn{
       currIndexes.add((cubeSize/2)*cr + (cubeSize/2 - 1)*ci);
       currIndexes.add((cubeSize/2)*cr + (cubeSize/2)*ci);
     }
-        
-    int currGroup = (dInv) ? ((d > 0) ? 2 : 1) : 0;
-    boolean prevState = false;
-    
+
+    int currGroup = c.blocks[currIndexes.get(0)].isMoving || isOnZerothLayer(d, cubeSize, dInv) ? 1 : (dInv) ? 2 : 0;
+    currGroup = (d == 0) ? 0 : (d == cubeSize - 1) ? 1 : (dInv) ? 2: 0;
+    boolean prevState = c.blocks[currIndexes.get(0)].isMoving;
+    int groupDiff = (currGroup > 0) ? -1 : 1;
     for(int i = 0; i < cubeSize; i++){
       for(int idx = 0; idx < currIndexes.size(); idx++){
         if(c.blocks[currIndexes.get(idx)].isMoving != prevState){
-          currGroup += (dInv) ? -1 : 1;
+          currGroup += groupDiff;
           prevState = c.blocks[currIndexes.get(idx)].isMoving;
         }
         groups.get(currGroup).add(currIndexes.get(idx));
         currIndexes.set(idx, currIndexes.get(idx) + cd);
       }
     }
-    
     return groups;
   }
 }

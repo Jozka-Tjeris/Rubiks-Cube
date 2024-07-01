@@ -117,6 +117,14 @@ void swapBlocks(Block[] arr, int a, int b){
   arr[b] = temp;
 }
 
+boolean isLayerOnEdge(int layer, int size){
+  return (layer == 0) || (layer == size - 1);
+}
+
+boolean isOnZerothLayer(int layer, int size, boolean dInv){
+  return (layer == 0 && !dInv) || (layer == size - 1 && dInv);
+}
+
 float getCos(float angle){
   return cosTable[(int)(angle*2 + 360) % 360];
 }
