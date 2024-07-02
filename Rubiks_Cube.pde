@@ -1,7 +1,7 @@
 boolean rotateX = false;
 boolean rotateY = false;
 boolean rotateZ = false;
-boolean reversed = false;
+boolean isClockwise = true;
 boolean upKeyPressed = false;
 boolean downKeyPressed = false;
 boolean leftKeyPressed = false;
@@ -58,7 +58,7 @@ void draw(){
   
   cube.show();
   updateCubeRotationState();
-  showRotations();
+  showMetrics();
   cube.updateMoves();
   
   if(mouseHeldDown){
@@ -71,10 +71,7 @@ void draw(){
 }
 
 void keyPressed(){
-  if(key == 'i'){
-    reversed = !reversed;
-    cube.setDirection(!cube.isTurnClockwise);
-  }
+  if(key == 'i') isClockwise = !isClockwise;
   
   if(key == ' '){
     spacebarPressed = !spacebarPressed;
@@ -94,7 +91,7 @@ void keyPressed(){
   if(key == ',') lessThanKeyPressed = true;
   if(key == '.') moreThanKeyPressed = true;
   
-  if(keyCode == BACKSPACE){
+  if(key == '\n'){
     spacebarPressed = false;
     rotateX = false;
     rotateY = false;
@@ -102,12 +99,12 @@ void keyPressed(){
     cube.reset();
   }
 
-  if(key == 'u') cube.addMove(Moves.U);
-  if(key == 'd') cube.addMove(Moves.D);
-  if(key == 'f') cube.addMove(Moves.F);
-  if(key == 'b') cube.addMove(Moves.B);
-  if(key == 'l') cube.addMove(Moves.L);
-  if(key == 'r') cube.addMove(Moves.R);
+  if(key == 'u') cube.addMove(Moves.U, isClockwise);
+  if(key == 'd') cube.addMove(Moves.D, isClockwise);
+  if(key == 'f') cube.addMove(Moves.F, isClockwise);
+  if(key == 'b') cube.addMove(Moves.B, isClockwise);
+  if(key == 'l') cube.addMove(Moves.L, isClockwise);
+  if(key == 'r') cube.addMove(Moves.R, isClockwise);
   
   if(key == 'q'){
     idx = (idx + 1) % cube.displayOrder.size();
@@ -117,6 +114,8 @@ void keyPressed(){
     idx = 0;
     cube.generateDisplayOrder(cube.blockGroups);
   }
+  
+  if(keyCode == BACKSPACE && cube.turnQueue.size() > 0) cube.turnQueue.removeLast();
   
   if('1' <= key && key <= '9') cube.setDepth(key - '0');
 }
@@ -130,20 +129,26 @@ void keyReleased(){
   if(key == '.') moreThanKeyPressed = false;
 }
 
-void showRotations(){
+void showMetrics(){
   textFont(f);
   fill(0);
   text("x: " + cube.blocks[0].rotation.x + (char)0x00B0, 10, 30);
   text("y: " + cube.blocks[0].rotation.y + (char)0x00B0, 10, 60);
   text("z: " + cube.blocks[0].rotation.z + (char)0x00B0, 10, 90);
-  String direction = "Clockwise";
-  if(reversed) direction = "Counter-Clockwise";
+  String direction = (isClockwise) ? "Clockwise" : "Counter-Clockwise";
   text("Direction: " + direction, 10, 120);
+  text("Current Layer: " + (cube.currDepth + 1), 10, 150);
+  text("Moves List:", 10, 180);
+  String s = (cube.currentTurn != null) ? cube.currentTurn.getInformation() + " " : "";
+  for(Turn t: cube.turnQueue){
+    s += t.getInformation() + " ";
+  }
+  text(s, 10, 210);
 }
 
 void updateCubeRotationState(){  
   int amount = 1;
-  if(reversed) amount = -1;
+  if(isClockwise) amount = -1;
   int rotationSpeed = 2;
   
   if(upKeyPressed) cube.updateState('x', 1*rotationSpeed);
@@ -217,3 +222,4 @@ void findAxis(boolean hasNewPos){
 //26-27 Jun: Improved the rendering process when doing slice turns
 //28-29 Jun: Tweaked the rendering process to reduce computations and increase reliability
 //1-2 Jul: Fixed the rendering process to handle surface and slice turns, added option to change depth and direction of turns
+//2 Jul: Fixed turn input system, added list to store multiple moves at once, added a way to delete turns

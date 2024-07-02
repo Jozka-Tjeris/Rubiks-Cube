@@ -171,8 +171,9 @@ class Block{
     }
   }
   
-  public void resetFacesToShow(){
-    for(int i = 0; i < sideColors.length; i++) sideColors[i] = -1;
+  public void setAllFacesToShow(int state){
+    if(state < -1 || state >= 1) return;
+    for(int i = 0; i < sideColors.length; i++) sideColors[i] = state;
   }
   
   public boolean toggleFacesToShow(String faceToChange, int status){

@@ -8,14 +8,12 @@ class Cube{
   HashMap<String, PieceGroup> blockGroups = new HashMap<String, PieceGroup>();
   ArrayList<String> displayOrder = new ArrayList<String>();
   ArrayList<HashMap<String, PieceGroup>> groupStages = new ArrayList<HashMap<String, PieceGroup>>();
-  LinkedList<Moves> moveQueue = new LinkedList<Moves>();
   int moveAnimationCounter = 0;
-  String currMove = " ";
-  int currDepth = 0;
   PVector[] originalBlockDisps;
   boolean readyToTurn = false;
+  LinkedList<Turn> turnQueue = new LinkedList<Turn>();
   Turn currentTurn;
-  boolean isTurnClockwise = true;
+  int currDepth = 0;
   
   public Cube(int size, int blockLength){
     cubeSize = size;
@@ -106,20 +104,17 @@ class Cube{
   }
   
   public void updateMoves(){
-    if(!Moves.getAllFaces().contains(currMove) && moveQueue.size() > 0){
-      currMove = moveQueue.removeFirst().name();
+    if(turnQueue.size() > 0 && currentTurn == null){
+      currentTurn = turnQueue.removeFirst();
     }
-    if(Moves.getAllFaces().contains(currMove)){
+    if(currentTurn != null){
       if(moveAnimationCounter < 90){
         moveAnimationCounter++;
-        if(!readyToTurn){
-          setUpBlocksToTurn(Moves.valueOf(currMove), currDepth);
-        }
-        turnFace(Moves.valueOf(currMove));
+        if(!readyToTurn) setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currDepth);
+        turnFace();
       }else{
         moveAnimationCounter = 0;
         shuffleBlocks();
-        currMove = " ";
       }
     }
   }
@@ -136,10 +131,6 @@ class Cube{
   public void setDepth(int depth){
     if(depth < 1 || depth > (cubeSize / 2) + (cubeSize % 2)) return;
     currDepth = depth - 1;
-  }
-  
-  public void setDirection(boolean state){
-    isTurnClockwise = state;
   }
     
   public void reset(){    
@@ -196,7 +187,6 @@ class Cube{
   private void setUpBlocksToTurn(Moves faceToTurn, int layer){
     if(layer < 0) layer = 0;
     if(layer >= cubeSize) layer = cubeSize - 1;
-    currentTurn = new Turn(cubeSize, layer, faceToTurn, isTurnClockwise);
 
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
@@ -208,9 +198,9 @@ class Cube{
     readyToTurn = true;
   }
   
-  private void turnFace(Moves faceToTurn){
+  private void turnFace(){
     if(!readyToTurn) return;
-    currentTurn.setAxis(faceToTurn, axis);
+    currentTurn.setAxis(axis);
   
     for(int r = 0; r < cubeSize; r++){
       for(int i = 0; i < cubeSize; i++){
@@ -238,7 +228,7 @@ class Cube{
     }
     
     int[][] arrTranspose = new int[cubeSize][cubeSize];
-    int[][] arrVFlipped = new int[cubeSize][cubeSize];
+    int[][] arrResFlipped = new int[cubeSize][cubeSize];
     
     for(int i = 0; i < cubeSize; i++){
       for(int j = 0; j < cubeSize; j++){
@@ -246,9 +236,17 @@ class Cube{
       }
     }
     
-    for(int i = 0; i < cubeSize; i++){
-      for(int j = 0; j < cubeSize; j++){
-        arrVFlipped[i][j] = arrTranspose[i][cubeSize - j - 1];
+    if(currentTurn.directionAmount > 0){
+      for(int i = 0; i < cubeSize; i++){
+        for(int j = 0; j < cubeSize; j++){
+          arrResFlipped[i][j] = arrTranspose[i][cubeSize - j - 1];
+        }
+      }
+    }else{
+      for(int i = 0; i < cubeSize; i++){
+        for(int j = 0; j < cubeSize; j++){
+          arrResFlipped[i][j] = arrTranspose[cubeSize - i - 1][j];
+        }
       }
     }
     
@@ -256,8 +254,8 @@ class Cube{
     
     for(int i = 0; i < cubeSize; i++){
       for(int j = 0; j < cubeSize; j++){
-        blockArr[i][j] = blocks[arrVFlipped[i][j]];
-        toggleMovingBlock(arrVFlipped[i][j], false);
+        blockArr[i][j] = blocks[arrResFlipped[i][j]];
+        toggleMovingBlock(arrResFlipped[i][j], false);
       }
     }
     
@@ -271,9 +269,8 @@ class Cube{
     readyToTurn = false;
   }
   
-  public void addMove(Moves m){
-    moveQueue.add(m);
-    println(moveQueue);
+  public void addMove(Moves m, boolean isTurnClockwise){
+    turnQueue.add(new Turn(cubeSize, currDepth, m, isTurnClockwise));
   }
   
   public void generateDisplayOrder(HashMap<String, PieceGroup> groupMap){

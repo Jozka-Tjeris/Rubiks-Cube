@@ -149,8 +149,8 @@ class Turn{
     oppFace = Moves.getOppositeFace(move.name());
   }
     
-  public void setAxis(Moves move, Axis axis){
-    switch(move.name().charAt(0)){
+  public void setAxis(Axis axis){
+    switch(faceToTurn.charAt(0)){
       case 'B':
         axisOfRotation = axis.getAxisOfRotation('z', true);
         break;
@@ -218,5 +218,15 @@ class Turn{
       }
     }
     return groups;
+  }
+  
+  public String getInformation(){
+    String s = "";
+    s += faceToTurn;
+    if(directionAmount < 0) s += "'";
+    s += "(";
+    s += dInv ? cubeSize - d - 1 : d; 
+    s += ")";
+    return s;
   }
 }
