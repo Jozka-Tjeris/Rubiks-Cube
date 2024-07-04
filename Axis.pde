@@ -5,7 +5,6 @@ class Axis{
   PVector[] points = new PVector[6];
   PVector center = new PVector(0, 0, 0);
   float axisLength = 0;
-  PVector rotation = new PVector(0, 0, 0);
   
   public Axis(PVector v, float l){
     center = v.copy();
@@ -63,10 +62,6 @@ class Axis{
     while(rotation.x < 0) rotation.x += 360;
     while(rotation.y < 0) rotation.y += 360;
     while(rotation.z < 0) rotation.z += 360;
-  }
-  
-  public void setRotation(PVector n){
-    rotation = n;
   }
   
   public void updateQXYZ(char direction, int amount){

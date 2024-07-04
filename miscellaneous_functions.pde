@@ -1,6 +1,5 @@
 public PVector[] applyPerspectiveProjection(PVector[] initialDisps, PVector distToCenter){
   PVector[] resultDisps = new PVector[initialDisps.length];
-  
   for(int i = 0; i < initialDisps.length; i++){
     PVector totalDistanceVector = initialDisps[i].copy();
     totalDistanceVector.add(distToCenter.copy().mult(2));
@@ -15,7 +14,6 @@ public PVector[] applyPerspectiveProjection(PVector[] initialDisps, PVector dist
 
 public PVector applyPerspectiveProjection(PVector initialDisp, PVector distToCenter){
   PVector resultDisp = new PVector(0, 0, 0);
-  
   PVector totalDistanceVector = initialDisp.copy();
   totalDistanceVector.add(distToCenter.copy().mult(2));
   float z = 1 / (cameraDistanceFactors[size - 1] - totalDistanceVector.z);
@@ -27,19 +25,18 @@ public PVector applyPerspectiveProjection(PVector initialDisp, PVector distToCen
   return resultDisp;
 }
 
-/*
-Source: http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
-V' = V + 2w(Q x V) + (2Q x (Q x V))
-V' = V + w(2(Q x V)) + (Q x (2(Q x V))
-T = 2(Q x V)
-V' = V + w*(T) + (Q x T)
-
-w = qReal
-Q = qImaginary (axis of rotation)
-V = vImaginary (point to rotate)
-*/
-
 public static PVector rotateQ(float qRe, PVector qIm, PVector vIm){
+  /*
+  Source: http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
+  V' = V + 2w(Q x V) + (2Q x (Q x V))
+  V' = V + w(2(Q x V)) + (Q x (2(Q x V))
+  T = 2(Q x V)
+  V' = V + w*(T) + (Q x T)
+  
+  w = qReal
+  Q = qImaginary (axis of rotation)
+  V = vImaginary (point to rotate)
+  */
   PVector result = new PVector(0, 0, 0);
   PVector T = (crossProduct(qIm, vIm)).mult(2);
   result = vIm.copy().add(T.copy().mult(qRe)).add(crossProduct(qIm, T));
@@ -60,22 +57,21 @@ public PVector rotateAroundAxis(float rotationAmount, char rotationDirection, PV
   PVector returnVal = pointToRotate.copy();
   float rotationAmtHalf = rotationAmount * 0.5;
   float rotationCoefficient = getCos(rotationAmtHalf);
-    
-  if(rotationDirection == 'x'){
-    PVector xAxis = new PVector(1, 0, 0).mult(getSin(rotationAmtHalf));
-    returnVal = rotateQ(rotationCoefficient, xAxis, returnVal);
+
+  switch(rotationDirection){
+    case 'x':
+      PVector xAxis = new PVector(1, 0, 0).mult(getSin(rotationAmtHalf));
+      returnVal = rotateQ(rotationCoefficient, xAxis, returnVal);
+      break;
+    case 'y':
+      PVector yAxis = new PVector(0, 1, 0).mult(getSin(rotationAmtHalf));
+      returnVal = rotateQ(rotationCoefficient, yAxis, returnVal);
+      break;
+    case 'z':
+      PVector zAxis = new PVector(0, 0, 1).mult(getSin(rotationAmtHalf));
+      returnVal = rotateQ(rotationCoefficient, zAxis, returnVal);
+      break;
   }
-  
-  if(rotationDirection == 'y'){
-    PVector yAxis = new PVector(0, 1, 0).mult(getSin(rotationAmtHalf));
-    returnVal = rotateQ(rotationCoefficient, yAxis, returnVal);
-  }
- 
- if(rotationDirection == 'z'){
-    PVector zAxis = new PVector(0, 0, 1).mult(getSin(rotationAmtHalf));
-    returnVal = rotateQ(rotationCoefficient, zAxis, returnVal);
-  }
- 
   return returnVal;
 }
 
@@ -95,26 +91,8 @@ public static float get2DLength(PVector p){
 }
 
 public static boolean isVectorFurther(PVector p1, PVector p2, float marginOfError){
-  if(abs(p1.z - p2.z) < marginOfError){
-    if(get2DLength(p1) > get2DLength(p2)){
-      return true;
-    }else{
-      return false;
-    }
-  }
-  else if(p1.z < p2.z){
-    return true;
-  }
-  return false;
-}
-
-public static void swapBlocks(Block[] arr, int a, int b){
-  if(a < 0 || b < 0 || a >= arr.length || b >= arr.length){
-    return;
-  }
-  Block temp = arr[a];
-  arr[a] = arr[b];
-  arr[b] = temp;
+  if(abs(p1.z - p2.z) < marginOfError) return get2DLength(p1) > get2DLength(p2);
+  else return p1.z < p2.z;
 }
 
 public void setDepth(int depth){

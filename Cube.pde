@@ -20,8 +20,7 @@ class Cube{
     originalBlockDisps = getNumbers(size);
     
     for(int i = 0; i < originalBlockDisps.length; i++){
-      blocks[i] = new Block(center, blockLength, originalBlockDisps[i].copy());
-      blocks[i].fillBlock = fillBlock;
+      blocks[i] = new Block(center, blockLength, originalBlockDisps[i].copy(), fillBlock);
       removeNeighbors(blocks[i], originalBlockDisps[i], size);
       
       String facesToShow = getFacesToShow(blocks[i]);
@@ -49,7 +48,6 @@ class Cube{
   private void removeNeighbors(Block block, PVector disps, int size){
     float offset = size/2;
     if(size % 2 == 0) offset -= 0.5;
-        
     //X+ Face (R)
     if(disps.x == offset) block.removeNeighbor("R");
     //X- Face(L)
@@ -72,17 +70,6 @@ class Cube{
     }
     else{
       for(int idx: getDisplayOrderGroups()){
-        switch(idx){
-            case 0:
-              stroke(255, 0, 0);
-              break;
-            case 1:
-              stroke(0, 255, 0);
-              break;
-            case 2:
-              stroke(0, 0, 255);
-              break;
-        }
         generateDisplayOrder(groupStages.get(idx));
         for(String g: displayOrder){
           if(groupStages.get(idx).containsKey(g)){
@@ -95,10 +82,7 @@ class Cube{
   }
   
   public void transform(char direction, int amount){
-    for(Block b: blocks){
-      b.transform(direction, amount);
-    }
-    
+    for(Block b: blocks) b.transform(direction, amount);
     axis.transform(direction, amount);
   }
   
@@ -109,7 +93,9 @@ class Cube{
     if(currentTurn != null){
       if(moveAnimationCounter < currentTurn.turnCount*90){
         moveAnimationCounter += abs(currentTurn.directionAmount);
-        if(!readyToTurn) setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currentTurn.d);
+        if(!readyToTurn){
+          setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currentTurn.d);
+        }
         turnFace();
       }else{
         moveAnimationCounter = 0;
@@ -129,8 +115,7 @@ class Cube{
     
   public void reset(){    
     for(int i = 0; i < originalBlockDisps.length; i++){
-      blocks[i] = new Block(center, cubeSize, originalBlockDisps[i].copy());
-      blocks[i].fillBlock = fillBlock;
+      blocks[i] = new Block(center, cubeSize, originalBlockDisps[i].copy(), fillBlock);
       removeNeighbors(blocks[i], originalBlockDisps[i], size);
       
       String facesToShow = getFacesToShow(blocks[i]);
@@ -223,7 +208,6 @@ class Cube{
         arrTranspose[i][j] = initPosArr[j][i];
       }
     }
-    
     if(isClockwise){
       for(int i = 0; i < cubeSize; i++){
         for(int j = 0; j < cubeSize; j++){
@@ -237,7 +221,6 @@ class Cube{
         }
       }
     }
-    
     return arrResFlipped;
   }
   
@@ -294,7 +277,6 @@ class Cube{
   public void generateDisplayOrder(HashMap<String, PieceGroup> groupMap){
     HashMap<String, PieceGroup> groupMapCopy = new HashMap<String, PieceGroup>();
     for(PieceGroup g: groupMap.values()){
-      //g.flipAll(false);
       g.setPosition(this);
       groupMapCopy.put(g.getFacesAsString(), g);
     }
@@ -380,26 +362,17 @@ class Cube{
         if(layer > 0 && layer < cubeSize - 1){
           groupMatchesFace.put(s, (PieceGroup) currGroup.clone());
           groupMatchesFace.get(s).filterNonMovingBlocks(this, '<', currentTurn);
-          //println("M" + groupMatchesFace.get(s).indexList);
-          if(groupMatchesFace.get(s).indexList.size() == 0){
-            groupMatchesFace.remove(s);
-          }
+          if(groupMatchesFace.get(s).indexList.size() == 0) groupMatchesFace.remove(s);
         }
         
         groupDoesntMatchBothFaces.put(s, (PieceGroup) currGroup.clone());
         groupDoesntMatchBothFaces.get(s).filterNonMovingBlocks(this, '=', currentTurn);
-        //println("D" + groupDoesntMatchBothFaces.get(s).indexList);
-        if(groupDoesntMatchBothFaces.get(s).indexList.size() == 0){
-          groupDoesntMatchBothFaces.remove(s);
-        }
+        if(groupDoesntMatchBothFaces.get(s).indexList.size() == 0) groupDoesntMatchBothFaces.remove(s);
 
         if(!isLayerOnEdge(layer, cubeSize)){
           groupMatchesOppositeFace.put(s, (PieceGroup) currGroup.clone());
           groupMatchesOppositeFace.get(s).filterNonMovingBlocks(this, '>', currentTurn);
-          //println("O" + groupMatchesOppositeFace.get(s).indexList);
-          if(groupMatchesOppositeFace.get(s).indexList.size() == 0){
-            groupMatchesOppositeFace.remove(s);
-          }
+          if(groupMatchesOppositeFace.get(s).indexList.size() == 0) groupMatchesOppositeFace.remove(s);
         }
       }
     }

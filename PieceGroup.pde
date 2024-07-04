@@ -22,9 +22,7 @@ class PieceGroup implements Cloneable{
   public PVector setPosition(Cube c){
     PVector sumPos = new PVector(0, 0, 0);
     for(int idx: indexList) sumPos.add(c.blocks[idx].distToCenter.copy());
-    
     position = sumPos.div(indexList.size()).copy();
-    
     return position;
   }
   
@@ -38,19 +36,8 @@ class PieceGroup implements Cloneable{
     return resPos;
   }
   
-  public PVector getSumOfPositions(Cube c){
-    PVector resPos = new PVector(0, 0, 0);
-    for(int idx: indexList){
-      resPos.add(c.blocks[idx].distToCenter.copy());
-      //println(idx + " " + c.blocks[idx].distToCenter.copy());
-    }
-    return resPos;
-  }
-  
   public void flipAll(Cube c, boolean state){
-    for(int idx: indexList){
-      c.blocks[idx].fillBlock = state;
-    }
+    for(int idx: indexList) c.blocks[idx].fillBlock = state;
   }
   
   public void drawBlocks(Cube c, boolean fillBlock){    
@@ -62,18 +49,12 @@ class PieceGroup implements Cloneable{
     HashMap<Integer, PVector> closestPoints = new HashMap<Integer, PVector>();
     
     for(int idx: indexList){
-      ArrayList<String> facesToShow = new ArrayList<String>();
-      if(fillBlock){
-        facesToShow = c.blocks[idx].findFacesToShow();
-      }else{
-        facesToShow = c.blocks[idx].findFacesToShowNoFill();
-      }
+      ArrayList<String> facesToShow = fillBlock ? c.blocks[idx].findFacesToShow() : c.blocks[idx].findFacesToShowNoFill();
       int numOfFaces = facesToShow.size();
       
-      if(!indexGroups.containsKey(numOfFaces)){
-        indexGroups.put(numOfFaces, new ArrayList<Integer>());
-      }
+      if(!indexGroups.containsKey(numOfFaces)) indexGroups.put(numOfFaces, new ArrayList<Integer>());
       indexGroups.get(numOfFaces).add(idx);
+      
       if(!closestPoints.containsKey(numOfFaces)){
         closestPoints.put(numOfFaces, new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE));
       }
@@ -117,7 +98,6 @@ class PieceGroup implements Cloneable{
     if(movingIndexList.size() == 0) return;
     
     ArrayList<Integer> resultIndexList = new ArrayList<Integer>();
-    
     switch(state){
       case '<':
         Collections.reverse(movingIndexList);

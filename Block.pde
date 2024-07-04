@@ -26,10 +26,11 @@ class Block{
   boolean isMoving = false;
   boolean fillBlock = false;
       
-  Block(PVector v, float l, PVector distanceToCenter){
+  Block(PVector v, float l, PVector distanceToCenter, boolean filled){
     setDistanceFactorFromCenter(distanceToCenter);
     center = v.copy();
     sideLength = l;
+    fillBlock = filled;
     
     for(int i = 0; i < pointDisps.length; i++){
       originalPointDisps[i] = new PVector(2*(i & 1) - 1, 

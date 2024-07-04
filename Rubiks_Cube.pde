@@ -35,9 +35,8 @@ PVector prevPos = new PVector(400, 400, 0);
 PVector currPos = new PVector(400, 400, 0);
 float scaleFactor = 0.9;
 
-int idx = 0;
 int movingCounter = 0;
-boolean fillBlocks = true;
+boolean fillBlocks = false;
 boolean doubleTurn = false;
 
 final color RFace = color(240, 0, 0);
@@ -62,9 +61,7 @@ public void setup(){
   //clamp size number
   if(size < 1) size = 1;
   if(size > 10) size = 10;
-  
-  //Note: For frame cube, anything over size 7 will cause lag
-  
+    
   //create new cube
   cube = new Cube(size, blockLengths[size - 1], fillBlocks);
 }
@@ -124,15 +121,6 @@ public void keyPressed(){
   if(key == 'l' || key == 'L') cube.addMove(Moves.L, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
   if(key == 'r' || key == 'R') cube.addMove(Moves.R, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
   
-  if(key == 'q'){
-    idx = (idx + 1) % cube.displayOrder.size();
-  }
-  
-  if(key == 'e'){
-    idx = 0;
-    cube.generateDisplayOrder(cube.blockGroups);
-  }
-  
   if(keyCode == BACKSPACE && cube.turnQueue.size() > 0) cube.turnQueue.removeLast();
   
   if('1' <= key && key <= '9') setDepth(key - '0');
@@ -155,15 +143,15 @@ public void showMetrics(){
   text("x: " + cube.blocks[0].rotation.x + (char)0x00B0, 10, 30);
   text("y: " + cube.blocks[0].rotation.y + (char)0x00B0, 10, 60);
   text("z: " + cube.blocks[0].rotation.z + (char)0x00B0, 10, 90);
+  
   String direction = (isClockwise) ? "Clockwise" : "Counter-Clockwise";
   text("Direction: " + direction, 10, 120);
   text("Current Layer: " + (currentDepth + 1), 10, 150);
   text("Turn mode: " + (doubleTurn ? "Double" : "Single"), 10, 180);
+  
   text("Moves List:", 10, 210);
   String s = (cube.currentTurn != null) ? cube.currentTurn.getInformation() + " " : "";
-  for(Turn t: cube.turnQueue){
-    s += t.getInformation() + " ";
-  }
+  for(Turn t: cube.turnQueue) s += t.getInformation() + " ";
   text(s, 10, 240);
 }
 
@@ -231,7 +219,7 @@ public void findAxis(boolean hasNewPos){
 //1 Jun: Started to add weak perspective projection
 //2 Jun: Added weak perspective projection
 //3 Jun: Applied colored tiles using new weak perspective projection method
-//7 Jun: Learning how proper 3D rotations work
+//7 Jun: Learning how proper 3D rotations work (main source: https://www.youtube.com/watch?v=aMqeG_0aFd0)
 //9 Jun: Added proper 3D rotations
 //14 & 15 Jun: Overhauled the cube display algorithm to facilitate turns
 //16 Jun: Added surface-level turns (without reference switching)
