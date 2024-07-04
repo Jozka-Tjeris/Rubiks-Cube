@@ -49,25 +49,63 @@ class PieceGroup implements Cloneable{
   
   public void flipAll(Cube c, boolean state){
     for(int idx: indexList){
-      c.blocks[idx].flipped = state;
+      c.blocks[idx].fillBlock = state;
     }
   }
   
-  public void drawBlocks(Cube c){    
-    ArrayList<String[]> faces = new ArrayList<String[]>();
-    ArrayList<Integer> indexes = new ArrayList<Integer>();
+  public void drawBlocks(Cube c, boolean fillBlock){    
+    //block index, faces to show
+    HashMap<Integer, ArrayList<String>> facesToShowList = new HashMap<Integer, ArrayList<String>>();
+    //number of faces to show, block index
+    HashMap<Integer, ArrayList<Integer>> indexGroups = new HashMap<Integer, ArrayList<Integer>>();
+    //number of faces to show, closest point
+    HashMap<Integer, PVector> closestPoints = new HashMap<Integer, PVector>();
     
     for(int idx: indexList){
-      faces.add(c.blocks[idx].findFacesToShow());
-      indexes.add(idx);
+      ArrayList<String> facesToShow = new ArrayList<String>();
+      if(fillBlock){
+        facesToShow = c.blocks[idx].findFacesToShow();
+      }else{
+        facesToShow = c.blocks[idx].findFacesToShowNoFill();
+      }
+      int numOfFaces = facesToShow.size();
+      
+      if(!indexGroups.containsKey(numOfFaces)){
+        indexGroups.put(numOfFaces, new ArrayList<Integer>());
+      }
+      indexGroups.get(numOfFaces).add(idx);
+      if(!closestPoints.containsKey(numOfFaces)){
+        closestPoints.put(numOfFaces, new PVector(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE));
+      }
+      if(isVectorFurther(closestPoints.get(numOfFaces), c.blocks[idx].distToCenter.copy(), marginOfErrors[c.cubeSize - 1])){
+        closestPoints.put(numOfFaces, c.blocks[idx].distToCenter.copy());
+      }
+      facesToShowList.put(idx, facesToShow);
     }
     
-    for(int i = 0; i < faces.get(0).length; i++){
-      for(int j = 0; j < faces.size(); j++){
-        String f = faces.get(j)[i];
-        if(c.blocks[indexes.get(j)].toggleFacesToShow(f, 1)){
-          c.blocks[indexes.get(j)].showFace(Moves.valueOf(f));
-          c.blocks[indexes.get(j)].showColor(Moves.valueOf(f));
+    ArrayList<Integer> orderToDraw = new ArrayList<Integer>();
+    while(closestPoints.size() > 0){
+      PVector closestP = new PVector(0, 0, Integer.MAX_VALUE);
+      int index = 0;
+      for(int i: closestPoints.keySet()){
+        if(isVectorFurther(closestPoints.get(i), closestP, marginOfErrors[c.cubeSize - 1])){
+          closestP = closestPoints.get(i);
+          index = i;
+        }
+      }
+      orderToDraw.add(index);
+      closestPoints.remove(index);
+    }
+
+    //goes through faces to show groups
+    for(int numOfFacesToDraw: orderToDraw){
+      //goes through number of faces to show
+      for(int faceIdx = 0; faceIdx < numOfFacesToDraw; faceIdx++){
+        //goes through all block indexes
+        for(int blockIndex : indexGroups.get(numOfFacesToDraw)){
+          String f = facesToShowList.get(blockIndex).get(faceIdx);
+          c.blocks[blockIndex].showFace(Moves.valueOf(f));
+          c.blocks[blockIndex].showColor(Moves.valueOf(f));
         }
       }
     }

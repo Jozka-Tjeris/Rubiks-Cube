@@ -1,3 +1,7 @@
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Collections;
+
 boolean rotateX = false;
 boolean rotateY = false;
 boolean rotateZ = false;
@@ -13,7 +17,8 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 6;
+int size = 5;
+int currentDepth = 0;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
 int[] blockLengths = {106, 204/2, 222/3, 240/4, 240/5, 240/6, 280/7, 320/8, 324/9, 400/10};
@@ -32,8 +37,18 @@ float scaleFactor = 0.9;
 
 int idx = 0;
 int movingCounter = 0;
+boolean fillBlocks = true;
 
-void setup(){
+final color RFace = color(240, 0, 0);
+final color LFace = color(240, 120, 0);
+final color FFace = color(0, 240, 0);
+final color BFace = color(0, 0, 240);
+final color UFace = color(250);
+final color DFace = color(240, 240, 0);
+final color blockFill = color(30);
+final color blockStroke = color(50);
+
+public void setup(){
   size(800, 800);
   f = createFont("TimesNewRomanPSMT", 20);
   textFont(f);
@@ -50,10 +65,10 @@ void setup(){
   //Note: For frame cube, anything over size 7 will cause lag
   
   //create new cube
-  cube = new Cube(size, blockLengths[size - 1]);
+  cube = new Cube(size, blockLengths[size - 1], fillBlocks);
 }
 
-void draw(){
+public void draw(){
   background(200);
   
   cube.show();
@@ -67,10 +82,9 @@ void draw(){
     point(mouseX, mouseY);
   }
   findAxis(mouseHeldDown);
-  cube.blockGroups.get(cube.displayOrder.get(idx)).flipAll(cube, true);
 }
 
-void keyPressed(){
+public void keyPressed(){
   if(key == 'i') isClockwise = !isClockwise;
   
   if(key == ' '){
@@ -99,12 +113,12 @@ void keyPressed(){
     cube.reset();
   }
 
-  if(key == 'u') cube.addMove(Moves.U, isClockwise);
-  if(key == 'd') cube.addMove(Moves.D, isClockwise);
-  if(key == 'f') cube.addMove(Moves.F, isClockwise);
-  if(key == 'b') cube.addMove(Moves.B, isClockwise);
-  if(key == 'l') cube.addMove(Moves.L, isClockwise);
-  if(key == 'r') cube.addMove(Moves.R, isClockwise);
+  if(key == 'u') cube.addMove(Moves.U, currentDepth, isClockwise);
+  if(key == 'd') cube.addMove(Moves.D, currentDepth, isClockwise);
+  if(key == 'f') cube.addMove(Moves.F, currentDepth, isClockwise);
+  if(key == 'b') cube.addMove(Moves.B, currentDepth, isClockwise);
+  if(key == 'l') cube.addMove(Moves.L, currentDepth, isClockwise);
+  if(key == 'r') cube.addMove(Moves.R, currentDepth, isClockwise);
   
   if(key == 'q'){
     idx = (idx + 1) % cube.displayOrder.size();
@@ -117,10 +131,10 @@ void keyPressed(){
   
   if(keyCode == BACKSPACE && cube.turnQueue.size() > 0) cube.turnQueue.removeLast();
   
-  if('1' <= key && key <= '9') cube.setDepth(key - '0');
+  if('1' <= key && key <= '9') setDepth(key - '0');
 }
 
-void keyReleased(){
+public void keyReleased(){
   if(keyCode == UP) upKeyPressed = false;
   if(keyCode == DOWN) downKeyPressed = false;
   if(keyCode == RIGHT) rightKeyPressed = false;
@@ -129,7 +143,7 @@ void keyReleased(){
   if(key == '.') moreThanKeyPressed = false;
 }
 
-void showMetrics(){
+public void showMetrics(){
   textFont(f);
   fill(0);
   text("x: " + cube.blocks[0].rotation.x + (char)0x00B0, 10, 30);
@@ -137,7 +151,7 @@ void showMetrics(){
   text("z: " + cube.blocks[0].rotation.z + (char)0x00B0, 10, 90);
   String direction = (isClockwise) ? "Clockwise" : "Counter-Clockwise";
   text("Direction: " + direction, 10, 120);
-  text("Current Layer: " + (cube.currDepth + 1), 10, 150);
+  text("Current Layer: " + (currentDepth + 1), 10, 150);
   text("Moves List:", 10, 180);
   String s = (cube.currentTurn != null) ? cube.currentTurn.getInformation() + " " : "";
   for(Turn t: cube.turnQueue){
@@ -146,7 +160,7 @@ void showMetrics(){
   text(s, 10, 210);
 }
 
-void updateCubeRotationState(){  
+public void updateCubeRotationState(){  
   int amount = 1;
   if(isClockwise) amount = -1;
   int rotationSpeed = 2;
@@ -169,15 +183,15 @@ void updateCubeRotationState(){
   }
 }
 
-void mousePressed(){
+public void mousePressed(){
   mouseHeldDown = true;
 }
 
-void mouseReleased(){
+public void mouseReleased(){
   mouseHeldDown = false;
 }
 
-void findAxis(boolean hasNewPos){
+public void findAxis(boolean hasNewPos){
   currPos.x = mouseX;
   currPos.y = mouseY;
   
@@ -222,4 +236,7 @@ void findAxis(boolean hasNewPos){
 //26-27 Jun: Improved the rendering process when doing slice turns
 //28-29 Jun: Tweaked the rendering process to reduce computations and increase reliability
 //1-2 Jul: Fixed the rendering process to handle surface and slice turns, added option to change depth and direction of turns
-//2 Jul: Fixed turn input system, added list to store multiple moves at once, added a way to delete turns
+//2 Jul: Fixed the turn input system, added list to store multiple moves at once, added a way to delete turns, 
+//2 Jul: added hotfix for rendering odd-layered cubes (incorrect indexing) and layer switching
+//3 Jul: Started adding solid block colors to the cube, attempting to fix turn rendering to accomodate the new feature
+//4 Jul: Fixed the face-rendering system to accomodate for extra faces (solid-blocks setting only)

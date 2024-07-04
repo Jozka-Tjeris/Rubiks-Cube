@@ -26,6 +26,6 @@ enum Moves{
   }
   
   public static String getAllFaces(){
-    return "FBUDLR";
+    return "UDRLFB";
   }
 }

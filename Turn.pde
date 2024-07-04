@@ -172,22 +172,6 @@ class Turn{
     }
   }
   
-  /* (g is based off of layer 0)
-  L: d = 0; g = 1
-  d = n - 1; g = 0
-  else: g = 0
-  
-  R: d = n - 1; g = 0
-  d = 0; g = 1
-  else: g = 2
-  
-  U: d = 0; g = 1
-  d = n - 1: g = 0
-  else: g = 0
-  
-  D: d = n - 1; g = 0
-  */
-  
   public ArrayList<ArrayList<Integer>> generateGroupList(Cube c){
     ArrayList<ArrayList<Integer>> groups = new ArrayList<ArrayList<Integer>>();
     groups.addAll(Arrays.asList(new ArrayList<Integer>(), new ArrayList<Integer>()));
@@ -225,7 +209,7 @@ class Turn{
     s += faceToTurn;
     if(directionAmount < 0) s += "'";
     s += "(";
-    s += dInv ? cubeSize - d - 1 : d; 
+    s += dInv ? cubeSize - d : d + 1; 
     s += ")";
     return s;
   }

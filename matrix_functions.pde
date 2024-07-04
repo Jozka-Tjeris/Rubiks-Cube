@@ -1,14 +1,14 @@
-float[][] vectorToMatrix(PVector v){
+public static float[][] vectorToMatrix(PVector v){
   float[][] res = {{v.x}, {v.y}, {v.z}};
   return res;
 }
 
-PVector matrixToVector(float[][] m){
+public static PVector matrixToVector(float[][] m){
   PVector res = new PVector(m[0][0], m[1][0], m[2][0]);
   return res;
 }
 
-float[][] matrixMult(float[][] a, float[][] b){
+public static float[][] matrixMult(float[][] a, float[][] b){
   if(a == null || b == null || a.length <= 0 || b.length <= 0 || a[0].length <= 0 || b[0].length <= 0){
     println("Invalid matrices or invalid matrix dimentions");
     return null;
@@ -30,7 +30,7 @@ float[][] matrixMult(float[][] a, float[][] b){
   return result;
 }
 
-PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
+public PVector[] generateRotationVectors(PVector rotation, PVector[] pointDisps){
   float[][] rotateX = {
     {     1     ,           0           ,           0            },
     {     0     ,getCos((int)rotation.x),-getSin((int)rotation.x)},

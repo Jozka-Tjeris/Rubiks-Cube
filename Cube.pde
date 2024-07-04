@@ -1,6 +1,3 @@
-import java.util.LinkedList;
-import java.util.Collections;
-
 class Cube{
   int cubeSize;
   Block[] blocks;
@@ -13,16 +10,18 @@ class Cube{
   boolean readyToTurn = false;
   LinkedList<Turn> turnQueue = new LinkedList<Turn>();
   Turn currentTurn;
-  int currDepth = 0;
+  boolean fillBlock;
   
-  public Cube(int size, int blockLength){
+  public Cube(int size, int blockLength, boolean drawFill){
     cubeSize = size;
+    fillBlock = drawFill;
     axis = new Axis(center, size*blockLength + 80);
     blocks = new Block[size*size*size];
     originalBlockDisps = getNumbers(size);
     
     for(int i = 0; i < originalBlockDisps.length; i++){
       blocks[i] = new Block(center, blockLength, originalBlockDisps[i].copy());
+      blocks[i].fillBlock = fillBlock;
       removeNeighbors(blocks[i], originalBlockDisps[i], size);
       
       String facesToShow = getFacesToShow(blocks[i]);
@@ -68,7 +67,7 @@ class Cube{
   public void show(){
     if(!readyToTurn){
       for(String g: displayOrder){ 
-        blockGroups.get(g).drawBlocks(this);
+        blockGroups.get(g).drawBlocks(this, fillBlock);
       }
     }
     else{
@@ -87,7 +86,7 @@ class Cube{
         generateDisplayOrder(groupStages.get(idx));
         for(String g: displayOrder){
           if(groupStages.get(idx).containsKey(g)){
-            groupStages.get(idx).get(g).drawBlocks(this);
+            groupStages.get(idx).get(g).drawBlocks(this, fillBlock);
           }
         }
       }
@@ -110,7 +109,7 @@ class Cube{
     if(currentTurn != null){
       if(moveAnimationCounter < 90){
         moveAnimationCounter++;
-        if(!readyToTurn) setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currDepth);
+        if(!readyToTurn) setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currentTurn.d);
         turnFace();
       }else{
         moveAnimationCounter = 0;
@@ -126,11 +125,6 @@ class Cube{
     }
     axis.updateQXYZ(direction, amount);
     generateDisplayOrder(blockGroups);
-  }
-  
-  public void setDepth(int depth){
-    if(depth < 1 || depth > (cubeSize / 2) + (cubeSize % 2)) return;
-    currDepth = depth - 1;
   }
     
   public void reset(){    
@@ -192,6 +186,13 @@ class Cube{
       for(int i = 0; i < cubeSize; i++){
         int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
         toggleMovingBlock(index, true);
+        
+        blocks[index].setFaceState(Moves.valueOf(currentTurn.oppFace), 0);
+        blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), 0);
+        if(!isLayerOnEdge(currentTurn.d, currentTurn.cubeSize)){
+          blocks[index].setFaceState(Moves.valueOf(currentTurn.faceToTurn), 0);
+          blocks[index - currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.oppFace), 0);
+        }
       }
     }
     generateGroups(faceToTurn, layer);
@@ -206,10 +207,6 @@ class Cube{
       for(int i = 0; i < cubeSize; i++){
         int index = currentTurn.d*currentTurn.cd + r*currentTurn.cr + i*currentTurn.ci;
         blocks[index].updateQAroundAxis(currentTurn.axisOfRotation, currentTurn.directionAmount);
-        //blocks[index].toggleFacesToShow(turn.oppFace, 0);
-        //blocks[index].showFace(Moves.valueOf(turn.oppFace));
-        //blocks[index + turn.diff].toggleFacesToShow(turn.faceToTurn, 0);
-        //blocks[index + turn.diff].showFace(Moves.valueOf(turn.faceToTurn));
       }
     }
   }
@@ -261,7 +258,16 @@ class Cube{
     
     for(int i = 0; i < cubeSize; i++){
       for(int j = 0; j < cubeSize; j++){
-        blocks[initPosArr[i][j]] = blockArr[i][j];
+        int index = initPosArr[i][j];
+        blocks[index] = blockArr[i][j];
+        blocks[index].applyTurnRotation(currentTurn);
+        
+        blocks[index].setFaceState(Moves.valueOf(currentTurn.oppFace), -1);
+        blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), -1);
+        if(!isLayerOnEdge(currentTurn.d, currentTurn.cubeSize)){
+          blocks[index].setFaceState(Moves.valueOf(currentTurn.faceToTurn), -1);
+          blocks[index - currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.oppFace), -1);
+        }
       }
     }
     
@@ -269,7 +275,7 @@ class Cube{
     readyToTurn = false;
   }
   
-  public void addMove(Moves m, boolean isTurnClockwise){
+  public void addMove(Moves m, int currDepth, boolean isTurnClockwise){
     turnQueue.add(new Turn(cubeSize, currDepth, m, isTurnClockwise));
   }
   
@@ -314,8 +320,8 @@ class Cube{
             closestP = currP;
           }
         }else{
-          if(isVectorFurther(closestP, blocks[p].distToCenter.copy(), marginOfErrors[cubeSize - 1])){
-            closestP = blocks[p].distToCenter.copy();
+          if(isVectorFurther(closestP, blocks[groupsToCompare.get(i).get(p)].distToCenter.copy(), marginOfErrors[cubeSize - 1])){
+            closestP = blocks[groupsToCompare.get(i).get(p)].distToCenter.copy();
           }
         }
       }
@@ -344,7 +350,6 @@ class Cube{
     Group 1: Groups that don't match the face(s)
     Group 2: Groups that match the opposite face (slice turns only)
     */
-    
     groupStages.clear();
     
     HashMap<String, PieceGroup> groupMatchesFace = new HashMap<String, PieceGroup>();
