@@ -69,14 +69,6 @@ class Axis{
     rotation = n;
   }
   
-  public void update(){
-    PVector[] resultDisps = generateRotationVectors(rotation, pointDisps);
-    
-    for(int i = 0; i < pointDisps.length; i++){
-      points[i] = center.copy().add(resultDisps[i].mult(axisLength/2));
-    }
-  }
-  
   public void updateQXYZ(char direction, int amount){
     for(int i = 0; i < pointDisps.length; i++){
       pointDisps[i] = rotateAroundAxis(amount, direction, pointDisps[i]);

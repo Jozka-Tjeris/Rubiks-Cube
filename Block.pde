@@ -215,10 +215,12 @@ class Block{
   }
   
   public void applyTurnRotation(Turn t){
-    int[] modifier = getTurnModifierArray(Moves.valueOf(t.faceToTurn), t.directionAmount > 0 ? true : false);
-    String[] newFacesArr = new String[6];
-    for(int i = 0; i < modifier.length; i++) newFacesArr[i] = relativePositions[modifier[i]];
-    relativePositions = newFacesArr;
+    for(int counter = 0; counter < t.turnCount; counter++){
+      int[] modifier = getTurnModifierArray(Moves.valueOf(t.faceToTurn), t.directionAmount > 0 ? true : false);
+      String[] newFacesArr = new String[6];
+      for(int i = 0; i < modifier.length; i++) newFacesArr[i] = relativePositions[modifier[i]];
+      relativePositions = newFacesArr;
+    }
   }
   
   public void setFaceState(Moves m, int state){
@@ -242,7 +244,6 @@ class Block{
           frontMostFace = currFace.name();
         }
       }
-      
       resultFaces.add(frontMostFace);
       zValues.remove(Moves.valueOf(frontMostFace));
     }

@@ -12,6 +12,7 @@ class Turn{
   boolean rInv = false;
   boolean dInv = false;
   int directionAmount = 0;
+  int turnCount = 0;
   
   /*
   Faces to target: (d is depth layer), Start by directly facing the center of the face to rotate
@@ -92,9 +93,10 @@ class Turn{
   [020, 021, 022, 023, 024]
   */
   
-  public Turn(int size, int layer, Moves move, boolean isTurnClockwise){
+  public Turn(int size, int layer, Moves move, boolean isTurnClockwise, int turnCounter){
     cubeSize = size;
-    directionAmount = isTurnClockwise ? 1 : -1;
+    directionAmount = isTurnClockwise ? 2 : -2;
+    turnCount = turnCounter;
     switch(move.name().charAt(0)){
       case 'B':
         cd = size*size;
@@ -206,11 +208,11 @@ class Turn{
   
   public String getInformation(){
     String s = "";
+    int layer = dInv ? cubeSize - d : d + 1;
+    s += (char) (0x2080 + layer); 
     s += faceToTurn;
+    if(turnCount == 2) s += "2";
     if(directionAmount < 0) s += "'";
-    s += "(";
-    s += dInv ? cubeSize - d : d + 1; 
-    s += ")";
     return s;
   }
 }

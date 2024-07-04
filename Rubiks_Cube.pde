@@ -17,7 +17,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 5;
+int size = 3;
 int currentDepth = 0;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
@@ -38,6 +38,7 @@ float scaleFactor = 0.9;
 int idx = 0;
 int movingCounter = 0;
 boolean fillBlocks = true;
+boolean doubleTurn = false;
 
 final color RFace = color(240, 0, 0);
 final color LFace = color(240, 120, 0);
@@ -86,6 +87,9 @@ public void draw(){
 
 public void keyPressed(){
   if(key == 'i') isClockwise = !isClockwise;
+  if(keyCode == SHIFT) isClockwise = false;
+  
+  if(keyCode == '\t') doubleTurn = true;
   
   if(key == ' '){
     spacebarPressed = !spacebarPressed;
@@ -113,12 +117,12 @@ public void keyPressed(){
     cube.reset();
   }
 
-  if(key == 'u') cube.addMove(Moves.U, currentDepth, isClockwise);
-  if(key == 'd') cube.addMove(Moves.D, currentDepth, isClockwise);
-  if(key == 'f') cube.addMove(Moves.F, currentDepth, isClockwise);
-  if(key == 'b') cube.addMove(Moves.B, currentDepth, isClockwise);
-  if(key == 'l') cube.addMove(Moves.L, currentDepth, isClockwise);
-  if(key == 'r') cube.addMove(Moves.R, currentDepth, isClockwise);
+  if(key == 'u' || key == 'U') cube.addMove(Moves.U, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
+  if(key == 'd' || key == 'D') cube.addMove(Moves.D, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
+  if(key == 'f' || key == 'F') cube.addMove(Moves.F, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
+  if(key == 'b' || key == 'B') cube.addMove(Moves.B, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
+  if(key == 'l' || key == 'L') cube.addMove(Moves.L, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
+  if(key == 'r' || key == 'R') cube.addMove(Moves.R, currentDepth, isClockwise, (doubleTurn ? 2 : 1));
   
   if(key == 'q'){
     idx = (idx + 1) % cube.displayOrder.size();
@@ -135,6 +139,8 @@ public void keyPressed(){
 }
 
 public void keyReleased(){
+  if(keyCode == SHIFT) isClockwise = true;
+  if(keyCode == '\t') doubleTurn = false;
   if(keyCode == UP) upKeyPressed = false;
   if(keyCode == DOWN) downKeyPressed = false;
   if(keyCode == RIGHT) rightKeyPressed = false;
@@ -152,12 +158,13 @@ public void showMetrics(){
   String direction = (isClockwise) ? "Clockwise" : "Counter-Clockwise";
   text("Direction: " + direction, 10, 120);
   text("Current Layer: " + (currentDepth + 1), 10, 150);
-  text("Moves List:", 10, 180);
+  text("Turn mode: " + (doubleTurn ? "Double" : "Single"), 10, 180);
+  text("Moves List:", 10, 210);
   String s = (cube.currentTurn != null) ? cube.currentTurn.getInformation() + " " : "";
   for(Turn t: cube.turnQueue){
     s += t.getInformation() + " ";
   }
-  text(s, 10, 210);
+  text(s, 10, 240);
 }
 
 public void updateCubeRotationState(){  
@@ -239,4 +246,4 @@ public void findAxis(boolean hasNewPos){
 //2 Jul: Fixed the turn input system, added list to store multiple moves at once, added a way to delete turns, 
 //2 Jul: added hotfix for rendering odd-layered cubes (incorrect indexing) and layer switching
 //3 Jul: Started adding solid block colors to the cube, attempting to fix turn rendering to accomodate the new feature
-//4 Jul: Fixed the face-rendering system to accomodate for extra faces (solid-blocks setting only)
+//4 Jul: Fixed the face-rendering system to accomodate for extra faces (solid-blocks setting only), added double turns

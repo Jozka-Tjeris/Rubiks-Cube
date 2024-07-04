@@ -107,8 +107,8 @@ class Cube{
       currentTurn = turnQueue.removeFirst();
     }
     if(currentTurn != null){
-      if(moveAnimationCounter < 90){
-        moveAnimationCounter++;
+      if(moveAnimationCounter < currentTurn.turnCount*90){
+        moveAnimationCounter += abs(currentTurn.directionAmount);
         if(!readyToTurn) setUpBlocksToTurn(Moves.valueOf(currentTurn.faceToTurn), currentTurn.d);
         turnFace();
       }else{
@@ -130,6 +130,7 @@ class Cube{
   public void reset(){    
     for(int i = 0; i < originalBlockDisps.length; i++){
       blocks[i] = new Block(center, cubeSize, originalBlockDisps[i].copy());
+      blocks[i].fillBlock = fillBlock;
       removeNeighbors(blocks[i], originalBlockDisps[i], size);
       
       String facesToShow = getFacesToShow(blocks[i]);
@@ -188,7 +189,9 @@ class Cube{
         toggleMovingBlock(index, true);
         
         blocks[index].setFaceState(Moves.valueOf(currentTurn.oppFace), 0);
-        blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), 0);
+        if(cubeSize > 1){
+          blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), 0);
+        }
         if(!isLayerOnEdge(currentTurn.d, currentTurn.cubeSize)){
           blocks[index].setFaceState(Moves.valueOf(currentTurn.faceToTurn), 0);
           blocks[index - currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.oppFace), 0);
@@ -211,19 +214,7 @@ class Cube{
     }
   }
   
-  private void shuffleBlocks(){
-    int[][] initPosArr = new int[cubeSize][cubeSize];
-    
-    for(int r = 0; r < cubeSize; r++){
-      for(int i = 0; i < cubeSize; i++){
-        int dIdx = currentTurn.d * currentTurn.cd;
-        int rIdx = currentTurn.rInv ? (cubeSize - r - 1)* currentTurn.cr : r* currentTurn.cr;
-        int iIdx = currentTurn.iInv ? (cubeSize - i - 1)* currentTurn.ci : i* currentTurn.ci;
-        
-        initPosArr[r][i] = dIdx + rIdx + iIdx;
-      }
-    }
-    
+  private int[][] rotateIndexes(int[][] initPosArr, boolean isClockwise){
     int[][] arrTranspose = new int[cubeSize][cubeSize];
     int[][] arrResFlipped = new int[cubeSize][cubeSize];
     
@@ -233,7 +224,7 @@ class Cube{
       }
     }
     
-    if(currentTurn.directionAmount > 0){
+    if(isClockwise){
       for(int i = 0; i < cubeSize; i++){
         for(int j = 0; j < cubeSize; j++){
           arrResFlipped[i][j] = arrTranspose[i][cubeSize - j - 1];
@@ -247,12 +238,31 @@ class Cube{
       }
     }
     
+    return arrResFlipped;
+  }
+  
+  private void shuffleBlocks(){
+    int[][] initPosArr = new int[cubeSize][cubeSize];
+    
+    for(int r = 0; r < cubeSize; r++){
+      for(int i = 0; i < cubeSize; i++){
+        int dIdx = currentTurn.d * currentTurn.cd;
+        int rIdx = currentTurn.rInv ? (cubeSize - r - 1)* currentTurn.cr : r* currentTurn.cr;
+        int iIdx = currentTurn.iInv ? (cubeSize - i - 1)* currentTurn.ci : i* currentTurn.ci;
+        
+        initPosArr[r][i] = dIdx + rIdx + iIdx;
+      }
+    }
+    
+    int[][] rotatedArr = rotateIndexes(initPosArr, currentTurn.directionAmount > 0);
+    if(currentTurn.turnCount == 2) rotatedArr = rotateIndexes(rotatedArr, currentTurn.directionAmount > 0);
+    
     Block[][] blockArr = new Block[cubeSize][cubeSize];
     
     for(int i = 0; i < cubeSize; i++){
       for(int j = 0; j < cubeSize; j++){
-        blockArr[i][j] = blocks[arrResFlipped[i][j]];
-        toggleMovingBlock(arrResFlipped[i][j], false);
+        blockArr[i][j] = blocks[rotatedArr[i][j]];
+        toggleMovingBlock(rotatedArr[i][j], false);
       }
     }
     
@@ -263,7 +273,9 @@ class Cube{
         blocks[index].applyTurnRotation(currentTurn);
         
         blocks[index].setFaceState(Moves.valueOf(currentTurn.oppFace), -1);
-        blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), -1);
+        if(cubeSize > 1){
+          blocks[index + currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.faceToTurn), -1);
+        }
         if(!isLayerOnEdge(currentTurn.d, currentTurn.cubeSize)){
           blocks[index].setFaceState(Moves.valueOf(currentTurn.faceToTurn), -1);
           blocks[index - currentTurn.diff].setFaceState(Moves.valueOf(currentTurn.oppFace), -1);
@@ -275,8 +287,8 @@ class Cube{
     readyToTurn = false;
   }
   
-  public void addMove(Moves m, int currDepth, boolean isTurnClockwise){
-    turnQueue.add(new Turn(cubeSize, currDepth, m, isTurnClockwise));
+  public void addMove(Moves m, int currDepth, boolean isTurnClockwise, int count){
+    turnQueue.add(new Turn(cubeSize, currDepth, m, isTurnClockwise, count));
   }
   
   public void generateDisplayOrder(HashMap<String, PieceGroup> groupMap){
