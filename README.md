@@ -1,4 +1,14 @@
 Note: openJDK 17 may need to be installed for the applications to work properly
+  
+This project is a step up in difficulty from all of the other projects I have done. 
+It stems from my hobbies of solving Rubik's Cubes and also challenging myself even more than before.
+5 weeks of coding have been invested into this project to create a working version that I would be happy with, 
+and I still want to add more features.
+But for now, enjoy this current version of a 3D Rubik's Cube.
+
+This project is based on 2 YouTube videos:
+- https://www.youtube.com/watch?v=p4Iz0XJY-Qk (3d object creation, perspective projection)
+- https://www.youtube.com/watch?v=aMqeG_0aFd0 (3d rotations)
 
 Manual (rotating the cube): 
 - x = rotate cube around x-axis (toggled on/off)
@@ -28,13 +38,3 @@ Manual (turning the cube):
 Manual (miscellaneous):
 - BACKSPACE = delete the most recently typed move if it hasn't been executed yet
 - RETURN = reset the cube's properties (position, turn list, etc)
-
-This project is based on 2 YouTube videos:
-- https://www.youtube.com/watch?v=p4Iz0XJY-Qk (3d object creation, perspective projection)
-- https://www.youtube.com/watch?v=aMqeG_0aFd0 (3d rotations)
-  
-This project is a step up in difficulty from all of the other projects I have done. 
-It stems from my hobbies of solving Rubik's Cubes and also challenging myself even more than before.
-5 weeks of coding have been invested into this project to create a working version that I would be happy with, 
-and I still want to add more features.
-But for now, enjoy this current version of a 3D Rubik's Cube.
