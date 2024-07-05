@@ -17,7 +17,7 @@ boolean mouseHeldDown = false;
 PFont f;
 
 Cube cube;
-int size = 3;
+int size = 10;
 int currentDepth = 0;
 PVector rotation = new PVector(0, 0, 0);
 PVector center = new PVector(400, 400, 0);
@@ -36,7 +36,7 @@ PVector currPos = new PVector(400, 400, 0);
 float scaleFactor = 0.9;
 
 int movingCounter = 0;
-boolean fillBlocks = true;
+boolean fillBlocks = false;
 boolean doubleTurn = false;
 
 final color RFace = color(240, 0, 0);
