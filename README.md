@@ -1,3 +1,7 @@
+
+## Demonstration of App
+<img width="1824" height="1880" alt="Screenshot 2025-08-29 at 4 41 29 PM" src="https://github.com/user-attachments/assets/58855bc7-0f22-4418-84e9-191f367682a4" />
+
 Note: openJDK 17 may need to be installed for the applications to work properly
   
 This project is a step up in difficulty from all of the other projects I have done. 
@@ -38,3 +42,4 @@ Manual (turning the cube):
 Manual (miscellaneous):
 - BACKSPACE = delete the most recently typed move if it hasn't been executed yet
 - RETURN = reset the cube's properties (position, turn list, etc)
+
